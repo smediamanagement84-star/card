@@ -1,0 +1,55 @@
+{
+  "entities": {
+    "Card": {
+      "title": "Digital Business Card",
+      "description": "Represents a user's digital business card details.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The Firebase Auth UID of the owner." },
+        "slug": { "type": "string", "description": "Unique URL identifier for the card." },
+        "name": { "type": "string" },
+        "title": { "type": "string" },
+        "bio": { "type": "string" },
+        "company": { "type": "string" },
+        "companySub": { "type": "string" },
+        "education": { "type": "string" },
+        "educationDegree": { "type": "string" },
+        "graduationYear": { "type": "string" },
+        "skills": { "type": "string" },
+        "mobile": { "type": "string" },
+        "email": { "type": "string" },
+        "website": { "type": "string" },
+        "location": { "type": "string" },
+        "linkedin": { "type": "string" },
+        "facebook": { "type": "string" },
+        "instagram": { "type": "string" },
+        "github": { "type": "string" },
+        "xSocial": { "type": "string" },
+        "photoUrl": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "themeColor": { "type": "string" },
+        "accentColor": { "type": "string" },
+        "fontHeading": { "type": "string" },
+        "fontBody": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "slug", "name"]
+    }
+  },
+  "firestore": {
+    "/cards/{cardId}": {
+      "schema": "Card",
+      "description": "Public business cards indexed by a unique card ID."
+    },
+    "/usernames/{slug}": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "cardId": { "type": "string" }
+        }
+      },
+      "description": "Mapping of slugs to card IDs for fast lookup and uniqueness enforcement."
+    }
+  }
+}

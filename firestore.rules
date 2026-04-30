@@ -1,0 +1,84 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidCard(data) {
+      return data.keys().hasAll(['uid', 'slug', 'name']) &&
+             data.uid == request.auth.uid &&
+             data.slug is string && data.slug.size() <= 50 &&
+             data.name is string && data.name.size() <= 100 &&
+             (!('title' in data) || (data.title is string && data.title.size() <= 100)) &&
+             (!('bio' in data) || (data.bio is string && data.bio.size() <= 500)) &&
+             (!('company' in data) || (data.company is string && data.company.size() <= 100)) &&
+             (!('companySub' in data) || (data.companySub is string && data.companySub.size() <= 100)) &&
+             (!('education' in data) || (data.education is string && data.education.size() <= 100)) &&
+             (!('educationDegree' in data) || (data.educationDegree is string && data.educationDegree.size() <= 100)) &&
+             (!('graduationYear' in data) || (data.graduationYear is string && data.graduationYear.size() <= 10)) &&
+             (!('skills' in data) || (data.skills is string && data.skills.size() <= 500)) &&
+             (!('email' in data) || (data.email is string && data.email.size() <= 100)) &&
+             (!('mobile' in data) || (data.mobile is string && data.mobile.size() <= 30)) &&
+             (!('website' in data) || (data.website is string && data.website.size() <= 200)) &&
+             (!('location' in data) || (data.location is string && data.location.size() <= 200)) &&
+             (!('linkedin' in data) || (data.linkedin is string && data.linkedin.size() <= 200)) &&
+             (!('facebook' in data) || (data.facebook is string && data.facebook.size() <= 200)) &&
+             (!('instagram' in data) || (data.instagram is string && data.instagram.size() <= 200)) &&
+             (!('github' in data) || (data.github is string && data.github.size() <= 200)) &&
+             (!('xSocial' in data) || (data.xSocial is string && data.xSocial.size() <= 200)) &&
+             (!('photoUrl' in data) || (data.photoUrl is string && data.photoUrl.size() <= 500)) &&
+             (!('logoUrl' in data) || (data.logoUrl is string && data.logoUrl.size() <= 500)) &&
+             (!('themeColor' in data) || (data.themeColor is string && data.themeColor.size() <= 20)) &&
+             (!('accentColor' in data) || (data.accentColor is string && data.accentColor.size() <= 20)) &&
+             (!('fontHeading' in data) || (data.fontHeading is string && data.fontHeading.size() <= 50)) &&
+             (!('fontBody' in data) || (data.fontBody is string && data.fontBody.size() <= 50));
+    }
+
+    // Cards Collection
+    match /cards/{cardId} {
+      allow get: if true;
+      allow list: if isSignedIn() && resource.data.uid == request.auth.uid;
+      
+      allow create: if isSignedIn() && 
+                      isValidCard(request.resource.data) &&
+                      request.resource.data.uid == request.auth.uid &&
+                      existsAfter(/databases/$(database)/documents/usernames/$(request.resource.data.slug));
+      
+      allow update: if isOwner(resource.data.uid) &&
+                      isValidCard(request.resource.data) &&
+                      request.resource.data.uid == resource.data.uid &&
+                      request.resource.data.slug == resource.data.slug;
+      
+      allow delete: if isOwner(resource.data.uid);
+    }
+
+    // Usernames mapping for slug uniqueness
+    match /usernames/{slug} {
+      allow get: if true;
+      allow create: if isSignedIn() &&
+                      isValidId(slug) &&
+                      request.resource.data.cardId is string &&
+                      // Ensure it points to a card owned by the user
+                      getAfter(/databases/$(database)/documents/cards/$(request.resource.data.cardId)).data.uid == request.auth.uid;
+      
+      allow update: if false; // Slugs are immutable or handle via delete/recreate
+      allow delete: if isSignedIn() && 
+                      get(/databases/$(database)/documents/cards/$(resource.data.cardId)).data.uid == request.auth.uid;
+    }
+  }
+}

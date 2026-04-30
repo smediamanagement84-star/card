@@ -1,0 +1,12 @@
+{
+  "name": "Elite Digital Card",
+  "description": "Premium digital business cards with QR codes and high-end design for modern professionals.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "PWA",
+    "QR Code Generation",
+    "User Profiles"
+  ]
+}
