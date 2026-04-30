@@ -6,7 +6,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { useState, useEffect, createContext, useContext } from 'react';
-import { auth } from './firebase';
+import { auth, handleGoogleRedirect } from './firebase';
 import Dashboard from './components/Dashboard';
 import CardView from './components/CardView';
 import Landing from './components/Landing';
@@ -26,9 +26,12 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Handle result if user was redirected back from Google sign-in
+    handleGoogleRedirect().catch(console.error);
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
-      setLoading(loading => false);
+      setLoading(() => false);
     });
     return unsubscribe;
   }, []);
