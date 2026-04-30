@@ -75,11 +75,13 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   };
 
   const handleGoogleLogin = async () => {
+    setError(null);
     try {
       await loginWithGoogle();
       onClose();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setError(err.message || 'Failed to sign in with Google. Please try again.');
     }
   };
 
@@ -185,8 +187,10 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   <label className="text-[10px] uppercase tracking-[0.2em] text-[#7A7870]">Enter Verification Code</label>
                   <input
                     type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
+                    onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
                     placeholder="123456"
                     maxLength={6}
                     className="w-full bg-[#0A0A0A] border border-[#2A2010] p-3 rounded text-sm text-[#F0EAD6] focus:border-[#C9A84C] outline-none text-center tracking-[1em] font-bold"

@@ -15,15 +15,6 @@ import { motion } from 'motion/react';
 import { Save, ExternalLink, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-enum OperationType {
-  CREATE = 'create',
-  UPDATE = 'update',
-  DELETE = 'delete',
-  LIST = 'list',
-  GET = 'get',
-  WRITE = 'write',
-}
-
 interface CardData {
   id?: string;
   name: string;
@@ -95,21 +86,6 @@ export default function Dashboard() {
     }
   }, [user]);
 
-  const handleFirestoreError = (error: any, operationType: OperationType, path: string | null) => {
-    const errInfo = {
-      error: error instanceof Error ? error.message : String(error),
-      authInfo: {
-        userId: user?.uid,
-        email: user?.email,
-        emailVerified: user?.emailVerified,
-      },
-      operationType,
-      path
-    };
-    console.error('Firestore Error: ', JSON.stringify(errInfo));
-    throw new Error(error.message || 'Operation failed');
-  };
-
   const fetchCard = async () => {
     try {
       const q = query(collection(db, 'cards'), where('uid', '==', user?.uid));
@@ -180,7 +156,11 @@ export default function Dashboard() {
     }
   };
 
-  if (loading) return null;
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="w-10 h-10 border-2 border-[#C9A84C] border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
@@ -269,22 +249,22 @@ export default function Dashboard() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-[10px] uppercase tracking-[0.1em] text-[#7A7870]">Company (Optional)</label>
-                <input 
-                  type="text" 
-                  value={data.company} 
+                <input
+                  type="text"
+                  value={data.company}
                   onChange={e => setData({...data, company: e.target.value})}
                   className="w-full bg-[#0A0A0A] border border-[#2A2010] p-3 rounded text-sm focus:border-[#C9A84C] outline-none transition-colors"
                   placeholder="e.g. Meta, University..."
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] uppercase tracking-[0.1em] text-[#7A7870]">Location (Optional)</label>
-                <input 
-                  type="text" 
-                  value={data.companySub} 
+                <label className="text-[10px] uppercase tracking-[0.1em] text-[#7A7870]">Dept / Subtitle (Optional)</label>
+                <input
+                  type="text"
+                  value={data.companySub}
                   onChange={e => setData({...data, companySub: e.target.value})}
                   className="w-full bg-[#0A0A0A] border border-[#2A2010] p-3 rounded text-sm focus:border-[#C9A84C] outline-none transition-colors"
-                  placeholder="e.g. Dubai, UAE"
+                  placeholder="e.g. Engineering Dept"
                 />
               </div>
             </div>
@@ -297,43 +277,43 @@ export default function Dashboard() {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] uppercase tracking-[0.1em] text-[#7A7870]">Org / University</label>
-                <input 
-                  type="text" 
-                  value={data.company} 
-                  onChange={e => setData({...data, company: e.target.value})}
+                <label className="text-[10px] uppercase tracking-[0.1em] text-[#7A7870]">School / University</label>
+                <input
+                  type="text"
+                  value={data.education}
+                  onChange={e => setData({...data, education: e.target.value})}
                   className="w-full bg-[#0A0A0A] border border-[#2A2010] p-3 rounded text-sm focus:border-[#C9A84C] outline-none transition-colors"
-                  placeholder="e.g. Apple / Harvard"
+                  placeholder="e.g. Harvard / MIT"
                 />
               </div>
               <div className="space-y-1.5">
                 <label className="text-[10px] uppercase tracking-[0.1em] text-[#7A7870]">Dept / Degree</label>
-                <input 
-                  type="text" 
-                  value={data.educationDegree} 
+                <input
+                  type="text"
+                  value={data.educationDegree}
                   onChange={e => setData({...data, educationDegree: e.target.value})}
                   className="w-full bg-[#0A0A0A] border border-[#2A2010] p-3 rounded text-sm focus:border-[#C9A84C] outline-none transition-colors"
-                  placeholder="e.g. Sales / CS"
+                  placeholder="e.g. BSc Computer Science"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] uppercase tracking-[0.1em] text-[#7A7870]">Location / City</label>
-                <input 
-                  type="text" 
-                  value={data.companySub} 
-                  onChange={e => setData({...data, companySub: e.target.value})}
+                <label className="text-[10px] uppercase tracking-[0.1em] text-[#7A7870]">City / Country</label>
+                <input
+                  type="text"
+                  value={data.location}
+                  onChange={e => setData({...data, location: e.target.value})}
                   className="w-full bg-[#0A0A0A] border border-[#2A2010] p-3 rounded text-sm focus:border-[#C9A84C] outline-none transition-colors"
-                  placeholder="e.g. Cupertino, CA"
+                  placeholder="e.g. Cambridge, MA"
                 />
               </div>
               <div className="space-y-1.5">
                 <label className="text-[10px] uppercase tracking-[0.1em] text-[#7A7870]">Year / Tenure</label>
-                <input 
-                  type="text" 
-                  value={data.graduationYear} 
+                <input
+                  type="text"
+                  value={data.graduationYear}
                   onChange={e => setData({...data, graduationYear: e.target.value})}
                   className="w-full bg-[#0A0A0A] border border-[#2A2010] p-3 rounded text-sm focus:border-[#C9A84C] outline-none transition-colors"
                   placeholder="e.g. 2025"
@@ -523,6 +503,12 @@ export default function Dashboard() {
                 <div className="space-y-1.5">
                   <label className="text-[10px] uppercase tracking-[0.1em] text-[#7A7870]">Instagram</label>
                   <input type="text" value={data.instagram} onChange={e => setData({...data, instagram: e.target.value})} className="w-full bg-[#0A0A0A] border border-[#2A2010] p-3 rounded text-sm focus:border-[#C9A84C] outline-none" placeholder="instagram.com/..." />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase tracking-[0.1em] text-[#7A7870]">Facebook</label>
+                  <input type="text" value={data.facebook} onChange={e => setData({...data, facebook: e.target.value})} className="w-full bg-[#0A0A0A] border border-[#2A2010] p-3 rounded text-sm focus:border-[#C9A84C] outline-none" placeholder="facebook.com/..." />
                 </div>
               </div>
             </div>

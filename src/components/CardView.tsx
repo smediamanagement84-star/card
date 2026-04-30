@@ -4,17 +4,14 @@ import { db } from '../firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
 import { QRCodeSVG } from 'qrcode.react';
-import { 
-  Phone, 
-  Mail, 
-  Globe, 
-  MapPin, 
-  Share2, 
-  Download, 
-  QrCode, 
-  Plus,
-  Linkedin,
-  Facebook
+import {
+  Phone,
+  Mail,
+  Globe,
+  MapPin,
+  Share2,
+  Download,
+  QrCode
 } from 'lucide-react';
 
 interface CardData {
@@ -162,11 +159,20 @@ export default function CardView() {
     </div>
   );
 
+  const fontVarMap: Record<string, string> = {
+    'Cormorant Garamond': '--font-serif',
+    'Playfair Display': '--font-playfair',
+    'Montserrat': '--font-sans',
+    'Outfit': '--font-outfit',
+    'Space Grotesk': '--font-space',
+    'Inter': '--font-inter',
+  };
+
   const themeStyle = {
     '--theme-bg': data.themeColor || '#0A0A0A',
     '--accent': data.accentColor || '#C9A84C',
-    '--font-h': data.fontHeading ? `var(--font-${data.fontHeading.toLowerCase().split(' ')[0]})` : 'var(--font-serif)',
-    '--font-b': data.fontBody ? `var(--font-${data.fontBody.toLowerCase().split(' ')[0]})` : 'var(--font-sans)',
+    '--font-h': `var(${fontVarMap[data.fontHeading || ''] || '--font-serif'})`,
+    '--font-b': `var(${fontVarMap[data.fontBody || ''] || '--font-sans'})`,
   } as React.CSSProperties;
 
   return (
@@ -285,7 +291,7 @@ export default function CardView() {
                   </div>
                   <div className="overflow-hidden">
                     <div className="text-[7px] uppercase tracking-[0.2em] mb-1" style={{ color: 'var(--accent)' }}>{item.label}</div>
-                    <a href={item.href} target="_blank" rel="noreferrer" className="text-[10px] text-[#F0EAD6] font-light leading-snug block truncate transition-colors" style={{ hover: { color: 'var(--accent)' } } as any}>
+                    <a href={item.href} target="_blank" rel="noreferrer" className="text-[10px] text-[#F0EAD6] font-light leading-snug block truncate transition-colors hover:text-[var(--accent)]">
                       {item.value}
                     </a>
                   </div>
@@ -308,7 +314,17 @@ export default function CardView() {
                 )}
                 {data.instagram && (
                   <a href={formatUrl(data.instagram)} target="_blank" rel="noreferrer" className="text-[7px] uppercase tracking-[0.2em] text-[#7A7870] border border-[#2A2010] rounded-full px-3 py-1.5 hover:border-[var(--accent)] hover:text-[var(--accent)] transition-all">
-                    Insta
+                    Instagram
+                  </a>
+                )}
+                {data.xSocial && (
+                  <a href={formatUrl(data.xSocial)} target="_blank" rel="noreferrer" className="text-[7px] uppercase tracking-[0.2em] text-[#7A7870] border border-[#2A2010] rounded-full px-3 py-1.5 hover:border-[var(--accent)] hover:text-[var(--accent)] transition-all">
+                    X
+                  </a>
+                )}
+                {data.facebook && (
+                  <a href={formatUrl(data.facebook)} target="_blank" rel="noreferrer" className="text-[7px] uppercase tracking-[0.2em] text-[#7A7870] border border-[#2A2010] rounded-full px-3 py-1.5 hover:border-[var(--accent)] hover:text-[var(--accent)] transition-all">
+                    Facebook
                   </a>
                 )}
               </div>
