@@ -6,7 +6,6 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // Helper functions
     function isSignedIn() {
       return request.auth != null;
     }
@@ -24,14 +23,19 @@ service cloud.firestore {
              data.uid == request.auth.uid &&
              data.slug is string && data.slug.size() <= 50 &&
              data.name is string && data.name.size() <= 100 &&
+             (!('userType' in data) || (data.userType is string && data.userType.size() <= 20)) &&
              (!('title' in data) || (data.title is string && data.title.size() <= 100)) &&
              (!('bio' in data) || (data.bio is string && data.bio.size() <= 500)) &&
              (!('company' in data) || (data.company is string && data.company.size() <= 100)) &&
              (!('companySub' in data) || (data.companySub is string && data.companySub.size() <= 100)) &&
+             (!('university' in data) || (data.university is string && data.university.size() <= 150)) &&
              (!('education' in data) || (data.education is string && data.education.size() <= 100)) &&
              (!('educationDegree' in data) || (data.educationDegree is string && data.educationDegree.size() <= 100)) &&
              (!('graduationYear' in data) || (data.graduationYear is string && data.graduationYear.size() <= 10)) &&
              (!('skills' in data) || (data.skills is string && data.skills.size() <= 500)) &&
+             (!('interests' in data) || (data.interests is string && data.interests.size() <= 500)) &&
+             (!('currentEvent' in data) || (data.currentEvent is string && data.currentEvent.size() <= 100)) &&
+             (!('followUpTemplates' in data) || (data.followUpTemplates is list && data.followUpTemplates.size() <= 20)) &&
              (!('email' in data) || (data.email is string && data.email.size() <= 100)) &&
              (!('mobile' in data) || (data.mobile is string && data.mobile.size() <= 30)) &&
              (!('website' in data) || (data.website is string && data.website.size() <= 200)) &&
@@ -53,17 +57,17 @@ service cloud.firestore {
     match /cards/{cardId} {
       allow get: if true;
       allow list: if isSignedIn() && resource.data.uid == request.auth.uid;
-      
-      allow create: if isSignedIn() && 
+
+      allow create: if isSignedIn() &&
                       isValidCard(request.resource.data) &&
                       request.resource.data.uid == request.auth.uid &&
                       existsAfter(/databases/$(database)/documents/usernames/$(request.resource.data.slug));
-      
+
       allow update: if isOwner(resource.data.uid) &&
                       isValidCard(request.resource.data) &&
                       request.resource.data.uid == resource.data.uid &&
                       request.resource.data.slug == resource.data.slug;
-      
+
       allow delete: if isOwner(resource.data.uid);
     }
 
@@ -73,12 +77,16 @@ service cloud.firestore {
       allow create: if isSignedIn() &&
                       isValidId(slug) &&
                       request.resource.data.cardId is string &&
-                      // Ensure it points to a card owned by the user
                       getAfter(/databases/$(database)/documents/cards/$(request.resource.data.cardId)).data.uid == request.auth.uid;
-      
-      allow update: if false; // Slugs are immutable or handle via delete/recreate
-      allow delete: if isSignedIn() && 
+
+      allow update: if false;
+      allow delete: if isSignedIn() &&
                       get(/databases/$(database)/documents/cards/$(resource.data.cardId)).data.uid == request.auth.uid;
+    }
+
+    // User connections (network) — each user owns their own contact list
+    match /users/{userId}/connections/{cardId} {
+      allow read, write, delete: if isOwner(userId);
     }
   }
 }

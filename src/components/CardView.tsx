@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { db } from '../firebase';
-import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
 import { QRCodeSVG } from 'qrcode.react';
+import { useAuth } from '../App';
 import {
   Phone,
   Mail,
@@ -11,19 +12,28 @@ import {
   MapPin,
   Share2,
   Download,
-  QrCode
+  QrCode,
+  UserPlus,
+  CheckCircle2,
+  Sparkles
 } from 'lucide-react';
 
 interface CardData {
+  id?: string;
+  uid?: string;
+  userType?: 'student' | 'professional';
   name: string;
   title: string;
   bio: string;
   company: string;
   companySub: string;
+  university?: string;
   education: string;
   educationDegree: string;
   graduationYear: string;
   skills: string;
+  interests?: string;
+  currentEvent?: string;
   mobile: string;
   email: string;
   website: string;
@@ -44,10 +54,13 @@ interface CardData {
 
 export default function CardView() {
   const { slug } = useParams<{ slug: string }>();
+  const { user } = useAuth();
   const [data, setData] = useState<CardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [showQR, setShowQR] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [connecting, setConnecting] = useState(false);
+  const [connected, setConnected] = useState(false);
 
   useEffect(() => {
     fetchCard();
@@ -98,13 +111,50 @@ export default function CardView() {
         const cardRef = doc(db, 'cards', cardId);
         const cardSnap = await getDoc(cardRef);
         if (cardSnap.exists()) {
-          setData(cardSnap.data() as CardData);
+          setData({ ...(cardSnap.data() as CardData), id: cardId });
         }
       }
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const checkConnected = async () => {
+      if (!user || !data?.id || data.uid === user.uid) return;
+      try {
+        const ref = doc(db, 'users', user.uid, 'connections', data.id);
+        const snap = await getDoc(ref);
+        if (snap.exists()) setConnected(true);
+      } catch {}
+    };
+    checkConnected();
+  }, [user, data?.id]);
+
+  const addToNetwork = async () => {
+    if (!user || !data?.id) return;
+    setConnecting(true);
+    try {
+      await setDoc(doc(db, 'users', user.uid, 'connections', data.id), {
+        cardId: data.id,
+        slug: data.slug,
+        name: data.name,
+        title: data.title || '',
+        company: data.company || '',
+        university: data.university || '',
+        email: data.email || '',
+        mobile: data.mobile || '',
+        addedAt: serverTimestamp(),
+      });
+      setConnected(true);
+      showToastMsg('Added to your network!');
+    } catch (err: any) {
+      console.error(err);
+      showToastMsg('Could not add. Try again.');
+    } finally {
+      setConnecting(false);
     }
   };
 
@@ -179,11 +229,22 @@ export default function CardView() {
 
   return (
     <div className="flex flex-col items-center justify-center py-12 px-6 min-h-[calc(100vh-64px)] transition-colors duration-700" style={{ ...themeStyle, backgroundColor: 'var(--theme-bg)', fontFamily: 'var(--font-b)' }}>
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-[480px]"
       >
+        {data.currentEvent && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 flex items-center justify-center gap-2 px-4 py-2 rounded-full border text-[10px] uppercase tracking-[0.25em]"
+            style={{ borderColor: 'var(--accent)', color: 'var(--accent)', background: 'color-mix(in srgb, var(--accent) 8%, transparent)' }}
+          >
+            <Sparkles className="w-3 h-3" />
+            <span>Live at {data.currentEvent}</span>
+          </motion.div>
+        )}
         <div className="relative bg-[#111111] border border-[#2E2510] rounded-sm overflow-hidden shadow-2xl" style={{ borderColor: 'color-mix(in srgb, var(--accent) 30%, transparent)' }}>
           {/* Decorative Gold Bars */}
           <div className="h-[2px]" style={{ background: `linear-gradient(to right, transparent, var(--accent), transparent)` }} />
@@ -242,19 +303,21 @@ export default function CardView() {
             )}
 
             {/* Education / Organisation */}
-            {(data.company || data.logoUrl || data.education) && (
+            {(data.company || data.logoUrl || data.education || data.university) && (
               <div className="flex items-center gap-4 bg-[#1A1A1A] border border-[#252010] border-l-2 p-4 mb-6 rounded-sm" style={{ borderLeftColor: 'var(--accent)' }}>
                 <div className="w-11 h-11 bg-[#222222] border border-dashed border-[#3A3020] rounded-sm flex items-center justify-center flex-shrink-0 overflow-hidden">
                   {data.logoUrl ? (
                      <img src={data.logoUrl} alt="Logo" className="w-full h-full object-contain" />
                   ) : (
-                    <div className="text-[6px] uppercase tracking-widest text-[#7A7870] text-center">Org /<br/>Uni</div>
+                    <div className="text-[6px] uppercase tracking-widest text-[#7A7870] text-center">{data.userType === 'student' ? 'Uni' : 'Org'}</div>
                   )}
                 </div>
                 <div>
-                  <div className="text-[7px] uppercase tracking-[0.3em] mb-0.5" style={{ color: 'var(--accent)' }}>Focus / Education</div>
+                  <div className="text-[7px] uppercase tracking-[0.3em] mb-0.5" style={{ color: 'var(--accent)' }}>
+                    {data.userType === 'student' ? 'University' : 'Organisation'}
+                  </div>
                   <div className="text-lg text-[#F0EAD6] leading-tight" style={{ fontFamily: 'var(--font-h)' }}>
-                    {data.company || data.education || 'Private'}
+                    {data.university || data.company || data.education || 'Private'}
                   </div>
                   {(data.educationDegree || data.companySub) && (
                     <div className="text-[8px] uppercase tracking-[0.2em] text-[#7A7870] mt-1">
@@ -262,6 +325,14 @@ export default function CardView() {
                     </div>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* Looking for / Interests (students) */}
+            {data.interests && (
+              <div className="mb-6">
+                <div className="text-[7px] uppercase tracking-[0.3em] mb-1" style={{ color: 'var(--accent)' }}>Looking for</div>
+                <div className="text-[11px] text-[#F0EAD6] font-light leading-relaxed">{data.interests}</div>
               </div>
             )}
 
@@ -371,15 +442,15 @@ export default function CardView() {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center justify-center gap-4 mt-8">
-          <button 
+          <button
             onClick={shareCard}
             className="px-6 py-3 rounded text-[9px] uppercase tracking-[0.3em] border border-[#3A3020] hover:border-[var(--accent)] transition-all flex items-center gap-2" style={{ color: 'var(--accent)' }}
           >
             <Share2 className="w-3 h-3" />
             Share Profile
           </button>
-          
-          <a 
+
+          <a
             href={`data:text/vcard;charset=utf-8,${encodeURIComponent(getVCard())}`}
             download={`${data.name.replace(/\s+/g, '_')}.vcf`}
             className="px-8 py-3 rounded text-[9px] uppercase tracking-[0.3em] font-bold hover:brightness-110 transition-all flex items-center gap-2 shadow-lg" style={{ backgroundColor: 'var(--accent)', color: 'var(--theme-bg)' }}
@@ -387,6 +458,25 @@ export default function CardView() {
             <Download className="w-3 h-3" />
             Save Contact
           </a>
+
+          {user && data.uid !== user.uid && (
+            connected ? (
+              <div className="px-6 py-3 rounded text-[9px] uppercase tracking-[0.3em] border border-green-500/40 text-green-300 flex items-center gap-2">
+                <CheckCircle2 className="w-3 h-3" />
+                In Your Network
+              </div>
+            ) : (
+              <button
+                onClick={addToNetwork}
+                disabled={connecting}
+                className="px-6 py-3 rounded text-[9px] uppercase tracking-[0.3em] border hover:brightness-110 transition-all flex items-center gap-2 disabled:opacity-50"
+                style={{ borderColor: 'var(--accent)', color: 'var(--accent)' }}
+              >
+                <UserPlus className="w-3 h-3" />
+                {connecting ? 'Adding…' : 'Add to My Network'}
+              </button>
+            )
+          )}
         </div>
       </motion.div>
 
