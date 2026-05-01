@@ -38,8 +38,8 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
-        <div className="w-12 h-12 border-2 border-[#C9A84C] border-t-transparent rounded-full animate-spin"></div>
+      <div className="app-bg min-h-screen flex items-center justify-center">
+        <div className="w-12 h-12 border-2 border-fuchsia-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -47,7 +47,7 @@ export default function App() {
   return (
     <AuthContext.Provider value={{ user, loading }}>
       <Router>
-        <div className="min-h-screen bg-[#0A0A0A] text-[#F0EAD6] font-sans selection:bg-[#C9A84C] selection:text-[#0A0A0A]">
+        <div className="app-bg grain min-h-screen text-white">
           <Navbar />
           <Routes>
             <Route path="/" element={<Landing />} />

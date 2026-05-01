@@ -1,14 +1,15 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
-import { Download, Copy, ExternalLink, QrCode } from 'lucide-react';
+import { Download, Copy, ExternalLink, QrCode, Check } from 'lucide-react';
 
 interface Props {
   slug: string;
   accentColor?: string;
 }
 
-export default function QRPanel({ slug, accentColor = '#C9A84C' }: Props) {
+export default function QRPanel({ slug, accentColor = '#a855f7' }: Props) {
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const [copied, setCopied] = useState(false);
   const url = `${window.location.origin}/d/${slug}`;
 
   const downloadQR = () => {
@@ -23,70 +24,50 @@ export default function QRPanel({ slug, accentColor = '#C9A84C' }: Props) {
   const copyLink = async () => {
     try {
       await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
     } catch {}
   };
 
   return (
-    <section className="space-y-6 bg-[#111111] p-8 rounded-lg border border-[#1A1A1A] md:col-span-2">
-      <div className="flex items-center gap-3 pb-2 border-b border-[#2A2010]">
-        <QrCode className="w-4 h-4 text-[#C9A84C]" />
-        <h3 className="text-[#C9A84C] text-xs uppercase tracking-[0.3em]">Your Shareable QR</h3>
+    <section className="glass rounded-3xl p-6 sm:p-7">
+      <div className="flex items-center gap-2.5 mb-5">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center">
+          <QrCode className="w-4 h-4 text-white" />
+        </div>
+        <div>
+          <h3 className="text-base font-bold text-white">Your QR code</h3>
+          <p className="text-xs text-white/50">Save it to your phone, print it, share it.</p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-8 items-start">
-        <div ref={wrapperRef} className="bg-white p-4 rounded shadow-inner border-2 mx-auto" style={{ borderColor: accentColor }}>
-          <QRCodeCanvas
-            value={url}
-            size={180}
-            level="H"
-            fgColor="#0A0A0A"
-            bgColor="#FFFFFF"
-            includeMargin={false}
-          />
+      <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-6 items-center">
+        <div ref={wrapperRef} className="relative bg-white p-4 rounded-2xl mx-auto shadow-2xl" style={{ boxShadow: `0 20px 50px -10px ${accentColor}40` }}>
+          <QRCodeCanvas value={url} size={180} level="H" fgColor="#0a0a14" bgColor="#FFFFFF" includeMargin={false} />
+          <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center text-lg" style={{ background: accentColor }}>✨</div>
         </div>
 
-        <div className="space-y-5">
-          <div>
-            <div className="text-[10px] uppercase tracking-[0.2em] text-[#7A7870] mb-2">How it works</div>
-            <ol className="text-xs text-[#F0EAD6]/80 font-light space-y-1.5 list-decimal list-inside">
-              <li>Download this QR &amp; save it to your phone gallery.</li>
-              <li>Show or print it — anyone scans it with their camera.</li>
-              <li>Scanner sees your live card and taps <span style={{ color: accentColor }}>Save Contact</span>.</li>
-            </ol>
+        <div className="space-y-4">
+          <ol className="text-sm text-white/70 space-y-1.5 list-decimal list-inside">
+            <li>Download &amp; save this QR to your phone gallery.</li>
+            <li>Show or print it — anyone with a camera can scan.</li>
+            <li>They tap <span style={{ color: accentColor }} className="font-semibold">Save Contact</span> &amp; you're in their phone.</li>
+          </ol>
+
+          <div className="bg-black/30 border border-white/10 rounded-xl px-3 py-2.5 flex items-center gap-2">
+            <code className="text-xs text-white/80 font-mono truncate flex-1">{url}</code>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-[10px] uppercase tracking-[0.2em] text-[#7A7870]">Your card URL</label>
-            <div className="flex items-center gap-2 bg-[#0A0A0A] border border-[#2A2010] rounded px-3 py-2">
-              <span className="text-[11px] text-[#F0EAD6] font-mono truncate flex-1">{url}</span>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={downloadQR}
-              className="inline-flex items-center gap-2 bg-[#C9A84C] text-[#0A0A0A] px-5 py-2.5 rounded text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-[#E8CC80] transition-all"
-            >
-              <Download className="w-3.5 h-3.5" />
-              Download PNG
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={downloadQR} className="btn-primary inline-flex items-center gap-2 !py-2.5 !px-5 text-xs">
+              <Download className="w-3.5 h-3.5" /> Download PNG
             </button>
-            <button
-              type="button"
-              onClick={copyLink}
-              className="inline-flex items-center gap-2 border border-[#3A3020] text-[#C9A84C] px-5 py-2.5 rounded text-[10px] uppercase tracking-[0.2em] hover:border-[#C9A84C] transition-all"
-            >
-              <Copy className="w-3.5 h-3.5" />
-              Copy Link
+            <button type="button" onClick={copyLink} className="btn-ghost inline-flex items-center gap-2 !py-2.5 !px-5 text-xs">
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? 'Copied!' : 'Copy link'}
             </button>
-            <a
-              href={url}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 border border-[#3A3020] text-[#7A7870] px-5 py-2.5 rounded text-[10px] uppercase tracking-[0.2em] hover:border-[#C9A84C] hover:text-[#C9A84C] transition-all"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-              Open Card
+            <a href={url} target="_blank" rel="noreferrer" className="btn-ghost inline-flex items-center gap-2 !py-2.5 !px-5 text-xs">
+              <ExternalLink className="w-3.5 h-3.5" /> Open
             </a>
           </div>
         </div>

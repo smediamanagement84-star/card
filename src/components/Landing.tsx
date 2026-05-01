@@ -1,118 +1,179 @@
 import { useAuth } from '../App';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { ArrowRight, Star, Smartphone, QrCode, Globe } from 'lucide-react';
+import { ArrowRight, Sparkles, QrCode, Users, Palette, Zap, Heart } from 'lucide-react';
 import { useState } from 'react';
 import AuthModal from './AuthModal';
+import CardPreview from './CardPreview';
+import { themes } from '../themes';
+
+const sampleData = {
+  userType: 'student' as const,
+  name: 'Aarya Shrestha',
+  title: 'Computer Science · KU',
+  bio: 'Building a chatbot that explains code in Nepali. Always down for late-night hackathons.',
+  university: 'Kathmandu University',
+  educationDegree: 'BE Computer',
+  graduationYear: '2027',
+  skills: 'React, Python, Figma, AI',
+  interests: 'Hackathon teammates · Internships',
+  currentEvent: 'KU Hackathon 2026',
+  email: 'aarya@ku.edu.np',
+  mobile: '+977 9841234567',
+  linkedin: 'linkedin.com',
+  github: 'github.com',
+  location: 'Dhulikhel, Nepal',
+};
 
 export default function Landing() {
   const { user } = useAuth();
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [activeThemeIdx, setActiveThemeIdx] = useState(0);
 
   return (
     <div className="relative overflow-hidden">
-      {/* Background Ornaments */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#C9A84C]/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/4" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#C9A84C]/5 blur-[120px] rounded-full translate-y-1/2 -translate-x-1/4" />
-
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 relative z-10">
-        <div className="text-center space-y-8 max-w-3xl mx-auto">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#C9A84C]/20 bg-[#C9A84C]/5 text-[#C9A84C] text-[10px] uppercase tracking-[0.3em]"
-          >
-            <Star className="w-3 h-3 fill-current" />
-            The Future of Networking
-          </motion.div>
-          
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-5xl sm:text-7xl font-serif text-[#F0EAD6] leading-tight"
-          >
-            Digital Presence <br /> 
-            <span className="italic text-[#C9A84C]">Redefined</span>
-          </motion.h1>
-
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-lg text-[#7A7870] font-light max-w-2xl mx-auto tracking-wide"
-          >
-            Elevate your professional identity with a bespoke digital business card. 
-            Designed for luxury, built for the modern executive.
-          </motion.p>
-
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8"
-          >
-            {user ? (
-              <Link
-                to="/dashboard"
-                className="w-full sm:w-auto bg-[#C9A84C] text-[#0A0A0A] px-10 py-4 rounded text-xs font-bold uppercase tracking-[0.2em] hover:bg-[#E8CC80] transition-all flex items-center justify-center gap-2 shadow-[0_10px_30px_rgba(201,168,76,0.3)]"
-              >
-                Go to Dashboard
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            ) : (
-              <button
-                onClick={() => setIsAuthModalOpen(true)}
-                className="w-full sm:w-auto bg-[#C9A84C] text-[#0A0A0A] px-10 py-4 rounded text-xs font-bold uppercase tracking-[0.2em] hover:bg-[#E8CC80] transition-all flex items-center justify-center gap-2 shadow-[0_10px_30px_rgba(201,168,76,0.3)]"
-              >
-                Create Your Card
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            )}
-            <Link
-              to="/d/sample"
-              className="w-full sm:w-auto border border-[#3A3020] text-[#7A7870] px-10 py-4 rounded text-xs font-bold uppercase tracking-[0.2em] hover:border-[#C9A84C] hover:text-[#C9A84C] transition-all flex items-center justify-center"
+      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-24">
+        <div className="grid lg:grid-cols-[1.1fr_1fr] gap-12 items-center">
+          <div className="space-y-7">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-xs"
             >
-              View Sample
-            </Link>
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-fuchsia-400 opacity-75 animate-ping" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-fuchsia-500" />
+              </span>
+              <span className="text-white/80">Live at <span className="text-fuchsia-400 font-semibold">KU Hackathon 2026</span></span>
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight"
+              style={{ fontFamily: 'Outfit' }}
+            >
+              <span className="text-white">Your card,</span>
+              <br />
+              <span className="gradient-text">your vibe.</span>
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-lg text-white/60 max-w-xl leading-relaxed"
+            >
+              Build a digital business card that actually feels like you. Pick a theme, share a QR, and grow your network at hackathons, fairs, and beyond.
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="flex flex-col sm:flex-row gap-3"
+            >
+              {user ? (
+                <Link to="/dashboard" className="btn-primary inline-flex items-center justify-center gap-2">
+                  Go to Dashboard <ArrowRight className="w-4 h-4" />
+                </Link>
+              ) : (
+                <button onClick={() => setAuthOpen(true)} className="btn-primary inline-flex items-center justify-center gap-2">
+                  Make My Card <ArrowRight className="w-4 h-4" />
+                </button>
+              )}
+              <Link to="/d/sample" className="btn-ghost inline-flex items-center justify-center gap-2">
+                <Sparkles className="w-4 h-4" /> See a sample
+              </Link>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="flex items-center gap-6 pt-4 text-xs text-white/50 flex-wrap"
+            >
+              <div className="flex items-center gap-1.5"><Heart className="w-3.5 h-3.5 text-pink-400" /> Free for students</div>
+              <div className="flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-yellow-400" /> No NFC needed</div>
+              <div className="flex items-center gap-1.5"><Palette className="w-3.5 h-3.5 text-purple-400" /> {themes.length} themes</div>
+            </motion.div>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, rotate: -5 }}
+            animate={{ opacity: 1, scale: 1, rotate: 0 }}
+            transition={{ delay: 0.4, type: 'spring' }}
+            className="relative"
+          >
+            <div className="float">
+              <CardPreview data={sampleData} theme={themes[activeThemeIdx]} />
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              className="absolute -bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 glass-strong rounded-full"
+            >
+              {themes.slice(0, 8).map((t, i) => (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveThemeIdx(i)}
+                  title={t.name}
+                  className="w-5 h-5 rounded-full transition-transform hover:scale-125"
+                  style={{
+                    background: t.background,
+                    border: activeThemeIdx === i ? '2px solid white' : '2px solid transparent',
+                  }}
+                />
+              ))}
+            </motion.div>
           </motion.div>
         </div>
+      </section>
 
-        {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-32">
+      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-12"
+        >
+          <h2 className="text-4xl font-bold text-white mb-3" style={{ fontFamily: 'Outfit' }}>Built for the way you actually network</h2>
+          <p className="text-white/50 max-w-2xl mx-auto">QR-first, student-first, and made to feel as good as it looks.</p>
+        </motion.div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {[
-            { icon: QrCode, title: "QR Integration", desc: "Instant contact sharing via unique, high-resolution QR codes accessible on any device." },
-            { icon: Smartphone, title: "PWA Experience", desc: "Installable on mobile home screens for lightning-fast access, even without a network." },
-            { icon: Globe, title: "Real-time Updates", desc: "Change your details anytime. Your one link stays the same, your profile is always current." }
-          ].map((feature, i) => (
+            { icon: QrCode, title: 'Scan-to-Save', desc: 'Anyone with a phone camera scans your QR and adds you to their contacts in two taps.', color: 'from-fuchsia-500 to-pink-500' },
+            { icon: Users, title: 'My Network', desc: "Sign in, scan a friend's card, and they land in your network — perfect for hackathons and career fairs.", color: 'from-blue-500 to-cyan-400' },
+            { icon: Palette, title: 'Themes That Pop', desc: `${themes.length} pre-made vibes from playful pastels to neon cyberpunk. Match your card to your mood.`, color: 'from-amber-400 to-orange-500' },
+          ].map((f, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="p-8 rounded-lg border border-[#1A1A1A] bg-[#111111]/50 space-y-4 hover:border-[#C9A84C]/30 transition-colors group"
+              whileHover={{ y: -6 }}
+              className="glass rounded-3xl p-7 transition-all"
             >
-              <div className="w-12 h-12 rounded-lg bg-[#C9A84C]/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <feature.icon className="w-6 h-6 text-[#C9A84C]" />
+              <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${f.color} flex items-center justify-center mb-4 shadow-lg`}>
+                <f.icon className="w-6 h-6 text-white" />
               </div>
-              <h3 className="text-xl font-serif text-[#F0EAD6]">{feature.title}</h3>
-              <p className="text-sm text-[#7A7870] leading-relaxed font-light">{feature.desc}</p>
+              <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily: 'Outfit' }}>{f.title}</h3>
+              <p className="text-sm text-white/60 leading-relaxed">{f.desc}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-[#1A1A1A] py-12 mt-20">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="text-[#3A3020] text-[10px] uppercase tracking-[0.5em]">
-            © 2026 Elite Digital Card · Crafted for Excellence
-          </p>
-        </div>
+      <footer className="relative max-w-7xl mx-auto px-4 py-12 mt-12 text-center">
+        <p className="text-xs text-white/30 uppercase tracking-[0.3em]">Made with 💜 for KU · 2026</p>
       </footer>
 
-      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
     </div>
   );
 }

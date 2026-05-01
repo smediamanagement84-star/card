@@ -1,55 +1,54 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../App';
 import { logout } from '../firebase';
-import { LogIn, LogOut, LayoutDashboard, CreditCard } from 'lucide-react';
+import { LogIn, LogOut, LayoutDashboard, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import AuthModal from './AuthModal';
 
 export default function Navbar() {
   const { user } = useAuth();
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
 
   return (
-    <nav className="border-b border-[#2E2510] bg-[#0A0A0A]/80 backdrop-blur-md sticky top-0 z-50">
+    <nav className="sticky top-0 z-40 backdrop-blur-xl bg-[#0a0a14]/60 border-b border-white/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded border border-[#C9A84C] flex items-center justify-center group-hover:bg-[#C9A84C]/10 transition-colors">
-              <CreditCard className="w-5 h-5 text-[#C9A84C]" />
+          <Link to="/" className="flex items-center gap-2.5 group">
+            <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-fuchsia-500 to-purple-600 flex items-center justify-center shadow-lg shadow-fuchsia-500/30 group-hover:shadow-fuchsia-500/50 transition-shadow">
+              <Sparkles className="w-4 h-4 text-white" />
             </div>
-            <span className="font-serif italic text-xl tracking-wide text-[#F0EAD6]">EliteCard</span>
+            <span className="font-bold text-lg text-white tracking-tight" style={{ fontFamily: 'Outfit' }}>
+              EliteCard
+            </span>
           </Link>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             {user ? (
               <>
-                <Link 
-                  to="/dashboard" 
-                  className="text-xs uppercase tracking-[0.2em] text-[#7A7870] hover:text-[#C9A84C] transition-colors flex items-center gap-2"
+                <Link
+                  to="/dashboard"
+                  className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm text-white/70 hover:text-white hover:bg-white/5 transition-all"
                 >
                   <LayoutDashboard className="w-4 h-4" />
-                  <span className="hidden sm:inline">Dashboard</span>
+                  Dashboard
                 </Link>
                 <button
                   onClick={logout}
-                  className="text-xs uppercase tracking-[0.2em] text-[#7A7870] hover:text-[#C9A84C] transition-colors flex items-center gap-2"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm text-white/70 hover:text-white hover:bg-white/5 transition-all"
                 >
                   <LogOut className="w-4 h-4" />
                   <span className="hidden sm:inline">Sign Out</span>
                 </button>
-                <div className="w-8 h-8 rounded-full border border-[#C9A84C] overflow-hidden bg-[#111111] flex items-center justify-center text-[10px] text-[#C9A84C]">
+                <div className="w-9 h-9 rounded-full overflow-hidden bg-gradient-to-br from-fuchsia-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white shadow-lg">
                   {user.photoURL ? (
                     <img src={user.photoURL} alt={user.displayName || ''} className="w-full h-full object-cover" />
                   ) : (
-                    <span>{user.phoneNumber?.slice(-2) || user.email?.charAt(0).toUpperCase()}</span>
+                    <span>{(user.displayName || user.email || 'U').charAt(0).toUpperCase()}</span>
                   )}
                 </div>
               </>
             ) : (
-              <button
-                onClick={() => setIsAuthModalOpen(true)}
-                className="bg-[#C9A84C] text-[#0A0A0A] px-6 py-2 rounded text-xs font-bold uppercase tracking-[0.2em] hover:bg-[#E8CC80] transition-colors flex items-center gap-2 shadow-[0_0_15px_rgba(201,168,76,0.2)]"
-              >
+              <button onClick={() => setAuthOpen(true)} className="btn-primary inline-flex items-center gap-2 !py-2 !px-5 text-sm">
                 <LogIn className="w-4 h-4" />
                 Sign In
               </button>
@@ -57,7 +56,7 @@ export default function Navbar() {
           </div>
         </div>
       </div>
-      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
     </nav>
   );
 }
