@@ -46,8 +46,8 @@ service cloud.firestore {
              (!('instagram' in data) || (data.instagram is string && data.instagram.size() <= 200)) &&
              (!('github' in data) || (data.github is string && data.github.size() <= 200)) &&
              (!('xSocial' in data) || (data.xSocial is string && data.xSocial.size() <= 200)) &&
-             (!('photoUrl' in data) || (data.photoUrl is string && data.photoUrl.size() <= 500)) &&
-             (!('logoUrl' in data) || (data.logoUrl is string && data.logoUrl.size() <= 500)) &&
+             (!('photoUrl' in data) || (data.photoUrl is string && data.photoUrl.size() <= 350000)) &&
+             (!('logoUrl' in data) || (data.logoUrl is string && data.logoUrl.size() <= 350000)) &&
              (!('themeColor' in data) || (data.themeColor is string && data.themeColor.size() <= 20)) &&
              (!('accentColor' in data) || (data.accentColor is string && data.accentColor.size() <= 20)) &&
              (!('fontHeading' in data) || (data.fontHeading is string && data.fontHeading.size() <= 50)) &&

@@ -112,7 +112,7 @@ export default function PhotoUpload({ value, uid, kind, shape = 'circle', label,
       )}
 
       <p className="text-[10px] text-white/40 leading-relaxed">
-        🔒 Photos are compressed locally and stripped of EXIF/location data before upload. Only you can replace them; only the public card displays them.
+        🔒 Photos are compressed in your browser and stripped of EXIF/location data before saving. Stored inside your card document — never sent to a third party.
       </p>
     </div>
   );
