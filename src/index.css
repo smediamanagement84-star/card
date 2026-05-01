@@ -17,9 +17,20 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
   background: #0a0a14;
   color: #ffffff;
+  overscroll-behavior-y: contain;
 }
 
 * { -webkit-tap-highlight-color: transparent; }
+
+/* Prevent iOS auto-zoom on input focus by forcing >= 16px font size on mobile */
+@media (max-width: 640px) {
+  input, textarea, select { font-size: 16px !important; }
+}
+
+/* Larger touch targets on mobile */
+@media (max-width: 640px) {
+  button, a.btn-primary, a.btn-ghost { min-height: 44px; }
+}
 
 .app-bg {
   background:

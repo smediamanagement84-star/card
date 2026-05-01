@@ -18,6 +18,7 @@ import NetworkPanel from './NetworkPanel';
 import TemplatesPanel from './TemplatesPanel';
 import CardPreview from './CardPreview';
 import ThemePicker from './ThemePicker';
+import PhotoUpload from './PhotoUpload';
 import { getTheme, CardTheme } from '../themes';
 
 type UserType = 'student' | 'professional';
@@ -231,7 +232,7 @@ export default function Dashboard() {
             {sections.map(s => (
               <button
                 key={s.id} type="button" onClick={() => setActiveSection(s.id)}
-                className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+                className={`flex-shrink-0 sm:flex-1 flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
                   activeSection === s.id
                     ? 'bg-gradient-to-r from-fuchsia-500 to-purple-500 text-white shadow-lg shadow-fuchsia-500/30'
                     : 'text-white/50 hover:text-white hover:bg-white/5'
@@ -353,14 +354,24 @@ export default function Dashboard() {
               )}
 
               {activeSection === 'photos' && (
-                <Section title="Photos" desc="A profile photo and an org/uni logo.">
-                  <Field label="Profile photo URL">
-                    <input type="text" value={data.photoUrl} onChange={e => setData({ ...data, photoUrl: e.target.value })} className="input-glass" placeholder="https://…" />
-                  </Field>
-                  <Field label={isStudent ? 'University logo URL' : 'Organisation logo URL'}>
-                    <input type="text" value={data.logoUrl} onChange={e => setData({ ...data, logoUrl: e.target.value })} className="input-glass" placeholder="https://…" />
-                  </Field>
-                  <p className="text-xs text-white/40">💡 Tip: paste a URL from imgur, GitHub avatars, or any public image host.</p>
+                <Section title="Photos" desc="A profile photo and an org/uni logo. Upload from your gallery or paste a URL.">
+                  <PhotoUpload
+                    value={data.photoUrl}
+                    uid={user?.uid || ''}
+                    kind="profile"
+                    shape="circle"
+                    label="Profile photo"
+                    onChange={url => setData({ ...data, photoUrl: url })}
+                  />
+                  <div className="h-px bg-white/5 my-2" />
+                  <PhotoUpload
+                    value={data.logoUrl}
+                    uid={user?.uid || ''}
+                    kind="logo"
+                    shape="square"
+                    label={isStudent ? 'University logo' : 'Organisation logo'}
+                    onChange={url => setData({ ...data, logoUrl: url })}
+                  />
                 </Section>
               )}
 

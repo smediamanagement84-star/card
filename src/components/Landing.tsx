@@ -32,8 +32,8 @@ export default function Landing() {
 
   return (
     <div className="relative overflow-hidden">
-      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-24">
-        <div className="grid lg:grid-cols-[1.1fr_1fr] gap-12 items-center">
+      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 pb-16 sm:pb-24">
+        <div className="grid lg:grid-cols-[1.1fr_1fr] gap-10 lg:gap-12 items-center">
           <div className="space-y-7">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -51,7 +51,7 @@ export default function Landing() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight"
+              className="text-4xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight"
               style={{ fontFamily: 'Outfit' }}
             >
               <span className="text-white">Your card,</span>

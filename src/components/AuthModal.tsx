@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { auth, loginWithGoogle, RecaptchaVerifier, signInWithPhoneNumber } from '../firebase';
-import { X, Phone, Mail, ArrowRight, RefreshCw, Sparkles } from 'lucide-react';
+import { X, Phone, Mail, ArrowRight, RefreshCw, Sparkles, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ConfirmationResult } from 'firebase/auth';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
+  redirectTo?: string;
 }
 
 function getAuthErrorMessage(code: string): string {
@@ -32,11 +34,15 @@ function getAuthErrorMessage(code: string): string {
       return 'Network error. Check your connection.';
     case 'auth/captcha-check-failed':
     case 'auth/missing-client-identifier':
-      return 'Security check failed. Refresh and try again.';
+      return 'Security check failed. Refresh the page and try again.';
     case 'auth/code-expired':
       return 'The verification code has expired. Request a new one.';
     case 'auth/invalid-verification-code':
       return 'Invalid code. Check and try again.';
+    case 'auth/billing-not-enabled':
+      return 'Phone sign-in is not yet enabled for this project.';
+    case 'auth/operation-not-allowed':
+      return 'Phone sign-in is disabled. Use Google instead.';
     default:
       return 'Authentication failed. Try again.';
   }
@@ -51,7 +57,8 @@ function clearRecaptcha() {
   } catch (_) {}
 }
 
-export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
+export default function AuthModal({ isOpen, onClose, redirectTo = '/dashboard' }: AuthModalProps) {
+  const navigate = useNavigate();
   const [step, setStep] = useState<'method' | 'phone' | 'otp'>('method');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState('');
@@ -70,6 +77,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     }
   }, [isOpen]);
 
+  // Mount visible reCAPTCHA when on phone step. Visible captcha is far more
+  // reliable on mobile browsers than the invisible variant.
   useEffect(() => {
     if (step !== 'phone') {
       clearRecaptcha();
@@ -78,97 +87,157 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     const timer = setTimeout(() => {
       try {
         clearRecaptcha();
-        (window as any).recaptchaVerifier = new RecaptchaVerifier(
-          auth, 'recaptcha-container',
-          { size: 'invisible', callback: () => {} }
-        );
-      } catch (e) { console.error('reCAPTCHA init error:', e); }
-    }, 100);
-    return () => { clearTimeout(timer); clearRecaptcha(); };
+        const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+          size: 'normal',
+          callback: () => {},
+          'expired-callback': () => {},
+        });
+        verifier.render().catch(e => console.error('reCAPTCHA render error:', e));
+        (window as any).recaptchaVerifier = verifier;
+      } catch (e) {
+        console.error('reCAPTCHA init error:', e);
+        setError('Could not load security check. Refresh the page.');
+      }
+    }, 150);
+    return () => {
+      clearTimeout(timer);
+      clearRecaptcha();
+    };
   }, [step]);
+
+  const finishAndRedirect = () => {
+    onClose();
+    setTimeout(() => navigate(redirectTo), 50);
+  };
 
   const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     const appVerifier = (window as any).recaptchaVerifier;
-    if (!appVerifier) { setError('Security check not ready. Refresh and try again.'); return; }
+    if (!appVerifier) {
+      setError('Security check not ready. Refresh and try again.');
+      return;
+    }
     setLoading(true);
     try {
-      const formattedPhone = phoneNumber.startsWith('+') ? phoneNumber : `+${phoneNumber}`;
+      const cleaned = phoneNumber.replace(/[^\d+]/g, '');
+      const formattedPhone = cleaned.startsWith('+') ? cleaned : `+${cleaned}`;
       const result = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
       setConfirmationResult(result);
       setStep('otp');
     } catch (err: any) {
-      console.error(err);
+      console.error('phone sign-in', err);
       setError(getAuthErrorMessage(err.code || ''));
+      // Reset captcha so user can retry without page refresh.
       clearRecaptcha();
-      try {
-        (window as any).recaptchaVerifier = new RecaptchaVerifier(
-          auth, 'recaptcha-container',
-          { size: 'invisible', callback: () => {} }
-        );
-      } catch (_) {}
-    } finally { setLoading(false); }
+      setTimeout(() => {
+        try {
+          const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+            size: 'normal', callback: () => {}, 'expired-callback': () => {},
+          });
+          verifier.render().catch(console.error);
+          (window as any).recaptchaVerifier = verifier;
+        } catch (_) {}
+      }, 200);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!confirmationResult) return;
-    setLoading(true); setError(null);
+    setLoading(true);
+    setError(null);
     try {
       await confirmationResult.confirm(otp);
-      onClose();
+      finishAndRedirect();
     } catch (err: any) {
       console.error(err);
       setError(getAuthErrorMessage(err.code || ''));
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoogleLogin = async () => {
-    setError(null); setLoading(true);
-    try { await loginWithGoogle(); onClose(); }
-    catch (err: any) { console.error(err); setError(getAuthErrorMessage(err.code || '')); }
-    finally { setLoading(false); }
+    setError(null);
+    setLoading(true);
+    try {
+      const result: any = await loginWithGoogle();
+      // signInWithPopup returns a UserCredential; signInWithRedirect resolves with undefined
+      // (the result is observed via getRedirectResult after page load).
+      if (result?.user) {
+        finishAndRedirect();
+      } else {
+        // Redirect path — the page is about to navigate away.
+        onClose();
+      }
+    } catch (err: any) {
+      console.error(err);
+      setError(getAuthErrorMessage(err.code || ''));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center sm:p-4">
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={onClose}
             className="absolute inset-0 bg-black/70 backdrop-blur-md"
           />
           <motion.div
-            initial={{ scale: 0.92, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.92, opacity: 0, y: 20 }}
-            transition={{ type: 'spring', damping: 22 }}
-            className="relative w-full max-w-md rounded-3xl overflow-hidden glass-strong p-8"
+            initial={{ y: 60, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 60, opacity: 0 }}
+            transition={{ type: 'spring', damping: 26 }}
+            className="relative w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl overflow-hidden glass-strong p-6 sm:p-8 pb-[max(env(safe-area-inset-bottom),1.5rem)]"
           >
             <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-fuchsia-500/30 blur-3xl pointer-events-none" />
             <div className="absolute -bottom-20 -left-20 w-60 h-60 rounded-full bg-purple-500/20 blur-3xl pointer-events-none" />
 
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/60 hover:text-white transition-all"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <div className="relative flex items-center justify-between mb-6">
+              {step !== 'method' ? (
+                <button
+                  type="button"
+                  onClick={() => { setStep('method'); setError(null); }}
+                  className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all"
+                  aria-label="Back"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+              ) : <span />}
+              <button
+                onClick={onClose}
+                className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
-            <div className="relative text-center mb-8">
+            <div className="relative text-center mb-6">
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-fuchsia-500 to-purple-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-fuchsia-500/40">
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-white" style={{ fontFamily: 'Outfit' }}>Welcome back</h3>
-              <p className="text-white/50 text-sm mt-1">Sign in to build & share your card.</p>
+              <h3 className="text-2xl font-bold text-white" style={{ fontFamily: 'Outfit' }}>
+                {step === 'method' ? 'Welcome' : step === 'phone' ? 'Your phone' : 'Enter code'}
+              </h3>
+              <p className="text-white/50 text-sm mt-1">
+                {step === 'method' ? 'Sign in to build & share your card.'
+                  : step === 'phone' ? 'We\'ll text you a 6-digit code.'
+                  : `Sent to ${phoneNumber}`}
+              </p>
             </div>
 
             {error && (
               <motion.div
                 initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-                className="relative mb-5 p-3 bg-red-500/10 border border-red-500/30 text-red-200 text-xs rounded-xl text-center leading-relaxed"
+                className="relative mb-4 p-3 bg-red-500/10 border border-red-500/30 text-red-200 text-xs rounded-xl text-center leading-relaxed"
               >
                 {error}
               </motion.div>
@@ -179,9 +248,9 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 <button
                   onClick={handleGoogleLogin}
                   disabled={loading}
-                  className="w-full flex items-center justify-center gap-3 bg-white text-black py-3.5 rounded-2xl text-sm font-semibold hover:bg-white/90 transition-all disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-3 bg-white text-black py-4 rounded-2xl text-base font-semibold hover:bg-white/90 transition-all disabled:opacity-50 active:scale-[0.98]"
                 >
-                  {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                  {loading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Mail className="w-5 h-5" />}
                   Continue with Google
                 </button>
                 <div className="flex items-center gap-3 py-2">
@@ -192,10 +261,10 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 <button
                   onClick={() => setStep('phone')}
                   disabled={loading}
-                  className="w-full flex items-center justify-center gap-3 bg-white/5 border border-white/10 text-white py-3.5 rounded-2xl text-sm font-semibold hover:bg-white/10 transition-all disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-3 bg-white/5 border border-white/10 text-white py-4 rounded-2xl text-base font-semibold hover:bg-white/10 transition-all active:scale-[0.98]"
                 >
-                  <Phone className="w-4 h-4" />
-                  Use Phone Number
+                  <Phone className="w-5 h-5" />
+                  Use phone number
                 </button>
               </div>
             )}
@@ -203,22 +272,33 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             {step === 'phone' && (
               <form onSubmit={handlePhoneSubmit} className="relative space-y-4">
                 <div className="space-y-2">
-                  <label className="text-xs font-semibold text-white/60">Phone Number</label>
+                  <label className="text-xs font-semibold text-white/60">Phone number</label>
                   <input
-                    type="tel" value={phoneNumber}
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
                     placeholder="+977 9841234567"
-                    className="input-glass" required autoFocus
+                    className="input-glass !text-base !py-4"
+                    required
+                    autoFocus
                   />
-                  <p className="text-[10px] text-white/40">Include country code — e.g. +977 for Nepal, +1 for US.</p>
+                  <p className="text-[11px] text-white/40">Include country code — e.g. +977 for Nepal, +1 for US.</p>
                 </div>
-                <div id="recaptcha-container" />
-                <button type="submit" disabled={loading} className="btn-primary w-full inline-flex items-center justify-center gap-2">
+
+                {/* Visible reCAPTCHA — much more reliable on mobile */}
+                <div className="flex justify-center">
+                  <div id="recaptcha-container" />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading || !phoneNumber}
+                  className="btn-primary w-full inline-flex items-center justify-center gap-2 !py-4 text-base"
+                >
                   {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
-                  Send Code
-                </button>
-                <button type="button" onClick={() => setStep('method')} className="w-full text-xs text-white/40 hover:text-white/70 transition-colors pt-1">
-                  ← Back to options
+                  Send code
                 </button>
               </form>
             )}
@@ -226,22 +306,33 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             {step === 'otp' && (
               <form onSubmit={handleOtpSubmit} className="relative space-y-4">
                 <div className="space-y-2">
-                  <label className="text-xs font-semibold text-white/60">Verification Code</label>
                   <input
-                    type="text" inputMode="numeric" pattern="[0-9]*"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    autoComplete="one-time-code"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
-                    placeholder="123456" maxLength={6} autoFocus
-                    className="input-glass text-center tracking-[0.5em] text-lg font-bold"
+                    placeholder="000000"
+                    maxLength={6}
+                    autoFocus
+                    className="input-glass text-center tracking-[0.6em] !text-2xl !py-5 font-bold"
                     required
                   />
-                  <p className="text-[10px] text-white/40 text-center">Sent to {phoneNumber}</p>
                 </div>
-                <button type="submit" disabled={loading || otp.length !== 6} className="btn-primary w-full inline-flex items-center justify-center gap-2">
+                <button
+                  type="submit"
+                  disabled={loading || otp.length !== 6}
+                  className="btn-primary w-full inline-flex items-center justify-center gap-2 !py-4 text-base"
+                >
                   {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : null}
-                  Confirm Login
+                  Confirm login
                 </button>
-                <button type="button" onClick={() => { setOtp(''); setStep('phone'); }} className="w-full text-xs text-white/40 hover:text-white/70 transition-colors pt-1">
+                <button
+                  type="button"
+                  onClick={() => { setOtp(''); setStep('phone'); }}
+                  className="w-full text-xs text-white/40 hover:text-white/70 transition-colors pt-1"
+                >
                   Change number
                 </button>
               </form>

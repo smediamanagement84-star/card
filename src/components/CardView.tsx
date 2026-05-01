@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { db } from '../firebase';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useAuth } from '../App';
 import {
-  Share2, Download, QrCode, UserPlus, CheckCircle2, X
+  Share2, Download, QrCode, UserPlus, CheckCircle2, X, ArrowLeft, ExternalLink
 } from 'lucide-react';
 import CardPreview, { CardPreviewData } from './CardPreview';
 import { getTheme } from '../themes';
@@ -15,10 +15,6 @@ interface CardData extends CardPreviewData {
   id?: string;
   uid?: string;
   themeId?: string;
-  themeColor?: string;
-  accentColor?: string;
-  fontHeading?: string;
-  fontBody?: string;
   slug: string;
   name: string;
 }
@@ -43,19 +39,35 @@ const sampleCard: CardData = {
   slug: 'sample',
 };
 
+const formatUrl = (url: string) => url.startsWith('http') ? url : `https://${url}`;
+
+function buildVCard(d: CardData): string {
+  const lines = ['BEGIN:VCARD', 'VERSION:3.0', `FN:${d.name}`];
+  if (d.title) lines.push(`TITLE:${d.title}`);
+  if (d.company) lines.push(`ORG:${d.company}`);
+  if (d.university) lines.push(`ORG:${d.university}`);
+  if (d.mobile) lines.push(`TEL:${d.mobile}`);
+  if (d.email) lines.push(`EMAIL:${d.email}`);
+  if (d.website) lines.push(`URL:${formatUrl(d.website)}`);
+  if (d.location) lines.push(`ADR:;;${d.location}`);
+  if (d.bio) lines.push(`NOTE:${d.bio.replace(/\r?\n/g, ' ')}`);
+  lines.push('END:VCARD');
+  return lines.join('\r\n');
+}
+
 export default function CardView() {
   const { slug } = useParams<{ slug: string }>();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [data, setData] = useState<CardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [showQR, setShowQR] = useState(false);
+  const [showSavePrompt, setShowSavePrompt] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [connecting, setConnecting] = useState(false);
   const [connected, setConnected] = useState(false);
 
-  useEffect(() => {
-    fetchCard();
-  }, [slug]);
+  useEffect(() => { fetchCard(); }, [slug]);
 
   const fetchCard = async () => {
     setLoading(true);
@@ -81,6 +93,21 @@ export default function CardView() {
     finally { setLoading(false); }
   };
 
+  // Trigger save-contact prompt after the card has rendered.
+  // Only for non-owners and only once per session per card.
+  useEffect(() => {
+    if (!data) return;
+    if (user && data.uid === user.uid) return;
+    const key = `seen-save-prompt-${data.slug}`;
+    if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem(key)) return;
+    const t = setTimeout(() => {
+      setShowSavePrompt(true);
+      try { sessionStorage.setItem(key, '1'); } catch {}
+    }, 1800);
+    return () => clearTimeout(t);
+  }, [data, user]);
+
+  // Check if already in viewer's network.
   useEffect(() => {
     const checkConnected = async () => {
       if (!user || !data?.id || data.uid === user.uid) return;
@@ -121,33 +148,27 @@ export default function CardView() {
     } finally { setConnecting(false); }
   };
 
-  const formatUrl = (url: string) => url.startsWith('http') ? url : `https://${url}`;
-
-  const shareCard = () => {
+  const shareCard = async () => {
     const url = window.location.href;
     if ((navigator as any).share) {
-      (navigator as any).share({
-        title: `${data?.name}${data?.company ? ' — ' + data.company : ''}`,
-        text: `Connect with ${data?.name}.`,
-        url,
-      });
+      try {
+        await (navigator as any).share({
+          title: `${data?.name}${data?.company ? ' — ' + data.company : ''}`,
+          text: `Connect with ${data?.name}.`,
+          url,
+        });
+      } catch {}
     } else {
-      navigator.clipboard.writeText(url).then(() => showToastMsg('Link copied!'));
+      try {
+        await navigator.clipboard.writeText(url);
+        showToastMsg('Link copied!');
+      } catch {}
     }
   };
 
-  const getVCard = () => {
-    if (!data) return '';
-    const lines = ['BEGIN:VCARD', 'VERSION:3.0', `FN:${data.name}`];
-    if (data.title) lines.push(`TITLE:${data.title}`);
-    if (data.company) lines.push(`ORG:${data.company}`);
-    if (data.university) lines.push(`ORG:${data.university}`);
-    if (data.mobile) lines.push(`TEL:${data.mobile}`);
-    if (data.email) lines.push(`EMAIL:${data.email}`);
-    if (data.website) lines.push(`URL:${formatUrl(data.website)}`);
-    if (data.location) lines.push(`ADR:;;${data.location}`);
-    lines.push('END:VCARD');
-    return lines.join('\r\n');
+  const goBack = () => {
+    if (window.history.length > 1) navigate(-1);
+    else navigate('/');
   };
 
   if (loading) return (
@@ -160,60 +181,139 @@ export default function CardView() {
     <div className="text-center py-20 px-4 relative z-10">
       <div className="text-6xl mb-4">🌫️</div>
       <h2 className="text-3xl font-bold text-white mb-2" style={{ fontFamily: 'Outfit' }}>Card not found</h2>
-      <p className="text-white/50">This card doesn't exist or has been moved.</p>
+      <p className="text-white/50 mb-6">This card doesn't exist or has been moved.</p>
+      <Link to="/" className="btn-primary inline-flex items-center gap-2">
+        <ArrowLeft className="w-4 h-4" /> Go home
+      </Link>
     </div>
   );
 
   const theme = getTheme(data.themeId);
+  const isOwner = !!user && data.uid === user.uid;
+  const vCard = buildVCard(data);
+  const vCardHref = `data:text/vcard;charset=utf-8,${encodeURIComponent(vCard)}`;
+  const fileName = `${data.name.replace(/\s+/g, '_')}.vcf`;
 
   return (
-    <div className="relative z-10 py-12 px-4 sm:px-6 min-h-[calc(100vh-64px)]">
+    <div className="relative z-10 py-6 sm:py-12 px-4 sm:px-6 min-h-[calc(100vh-64px)]">
+      {/* Back bar */}
+      <div className="max-w-md mx-auto mb-4 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={goBack}
+          className="inline-flex items-center gap-2 text-xs text-white/60 hover:text-white transition-colors"
+          aria-label="Go back"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </button>
+        {isOwner && (
+          <Link to="/dashboard" className="text-xs text-white/60 hover:text-white transition-colors inline-flex items-center gap-1">
+            Edit <ExternalLink className="w-3 h-3" />
+          </Link>
+        )}
+      </div>
+
       <div className="max-w-md mx-auto">
         <CardPreview data={data} theme={theme} />
 
-        {/* Action Buttons */}
-        <div className="flex flex-wrap items-center justify-center gap-3 mt-8">
-          <button onClick={shareCard} className="btn-ghost inline-flex items-center gap-2 !py-3 !px-5 text-xs">
-            <Share2 className="w-3.5 h-3.5" />
-            Share
-          </button>
-
+        {/* Primary actions — save contact is most prominent */}
+        <div className="mt-6 space-y-3">
           <a
-            href={`data:text/vcard;charset=utf-8,${encodeURIComponent(getVCard())}`}
-            download={`${data.name.replace(/\s+/g, '_')}.vcf`}
-            className="btn-primary inline-flex items-center gap-2 !py-3 !px-5 text-xs"
+            href={vCardHref}
+            download={fileName}
+            className="btn-primary w-full inline-flex items-center justify-center gap-2 !py-4 text-sm shadow-2xl shadow-fuchsia-500/40"
           >
-            <Download className="w-3.5 h-3.5" />
-            Save Contact
+            <Download className="w-4 h-4" />
+            Save {data.name.split(' ')[0]} to my phone
           </a>
 
-          <button
-            onClick={() => setShowQR(true)}
-            className="btn-ghost inline-flex items-center gap-2 !py-3 !px-5 text-xs"
-          >
-            <QrCode className="w-3.5 h-3.5" />
-            QR
-          </button>
-
-          {user && data.uid !== user.uid && (
-            connected ? (
-              <div className="inline-flex items-center gap-2 px-5 py-3 rounded-full text-xs font-semibold bg-emerald-500/15 border border-emerald-400/40 text-emerald-200">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                In Network
-              </div>
+          <div className="grid grid-cols-3 gap-2">
+            <button onClick={shareCard} className="btn-ghost inline-flex items-center justify-center gap-1.5 !py-3 !px-3 text-xs">
+              <Share2 className="w-3.5 h-3.5" />
+              Share
+            </button>
+            <button onClick={() => setShowQR(true)} className="btn-ghost inline-flex items-center justify-center gap-1.5 !py-3 !px-3 text-xs">
+              <QrCode className="w-3.5 h-3.5" />
+              QR
+            </button>
+            {user && data.uid !== user.uid ? (
+              connected ? (
+                <div className="inline-flex items-center justify-center gap-1.5 px-3 py-3 rounded-full text-xs font-semibold bg-emerald-500/15 border border-emerald-400/40 text-emerald-200">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Saved
+                </div>
+              ) : (
+                <button
+                  onClick={addToNetwork}
+                  disabled={connecting}
+                  className="btn-ghost inline-flex items-center justify-center gap-1.5 !py-3 !px-3 text-xs disabled:opacity-60"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  {connecting ? '…' : 'Connect'}
+                </button>
+              )
             ) : (
-              <button
-                onClick={addToNetwork}
-                disabled={connecting}
-                className="btn-ghost inline-flex items-center gap-2 !py-3 !px-5 text-xs"
+              <a
+                href={data.mobile ? `tel:${data.mobile}` : data.email ? `mailto:${data.email}` : '#'}
+                className="btn-ghost inline-flex items-center justify-center gap-1.5 !py-3 !px-3 text-xs"
               >
-                <UserPlus className="w-3.5 h-3.5" />
-                {connecting ? 'Adding…' : 'Add to Network'}
-              </button>
-            )
-          )}
+                Contact
+              </a>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Save-contact prompt bottom sheet */}
+      <AnimatePresence>
+        {showSavePrompt && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            transition={{ type: 'spring', damping: 26 }}
+            className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm z-50 glass-strong rounded-2xl p-4 shadow-2xl"
+            style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
+          >
+            <div className="flex items-start gap-3">
+              <div className="text-3xl flex-shrink-0">📥</div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-white">
+                  Save {data.name.split(' ')[0]} to your phone?
+                </p>
+                <p className="text-xs text-white/60 mt-0.5">
+                  One tap adds {data.title || 'them'} to your contacts.
+                </p>
+                <div className="flex gap-2 mt-3">
+                  <a
+                    href={vCardHref}
+                    download={fileName}
+                    onClick={() => setShowSavePrompt(false)}
+                    className="btn-primary inline-flex items-center gap-1.5 !py-2 !px-4 text-xs"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    Save now
+                  </a>
+                  <button
+                    onClick={() => setShowSavePrompt(false)}
+                    className="px-3 py-2 rounded-full text-xs text-white/50 hover:text-white transition-colors"
+                  >
+                    Not now
+                  </button>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowSavePrompt(false)}
+                className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white flex-shrink-0"
+                aria-label="Dismiss"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* QR overlay */}
       <AnimatePresence>
@@ -227,11 +327,12 @@ export default function CardView() {
             <motion.div
               initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.92, opacity: 0 }}
               transition={{ type: 'spring', damping: 22 }}
-              className="relative glass-strong rounded-3xl p-8 max-w-sm w-full"
+              className="relative glass-strong rounded-3xl p-6 sm:p-8 max-w-sm w-full"
             >
               <button
                 onClick={() => setShowQR(false)}
-                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/60 hover:text-white"
+                className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/60 hover:text-white"
+                aria-label="Close"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -240,7 +341,15 @@ export default function CardView() {
               <div className="bg-white p-4 rounded-2xl mx-auto w-fit">
                 <QRCodeSVG value={window.location.href} size={220} level="H" />
               </div>
-              <div className="mt-5 text-center text-[10px] uppercase tracking-widest text-white/40">{theme.emoji} {theme.name}</div>
+              <a
+                href={vCardHref}
+                download={fileName}
+                onClick={() => setShowQR(false)}
+                className="btn-primary w-full inline-flex items-center justify-center gap-2 mt-5 !py-3 text-xs"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Or save to phone
+              </a>
             </motion.div>
           </div>
         )}
@@ -252,7 +361,7 @@ export default function CardView() {
             initial={{ opacity: 0, y: 30, x: '-50%' }}
             animate={{ opacity: 1, y: 0, x: '-50%' }}
             exit={{ opacity: 0, y: 30, x: '-50%' }}
-            className="fixed bottom-8 left-1/2 px-5 py-2.5 glass-strong rounded-full text-xs text-white font-semibold z-[100]"
+            className="fixed bottom-24 left-1/2 px-5 py-2.5 glass-strong rounded-full text-xs text-white font-semibold z-[101]"
           >
             {toast}
           </motion.div>

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { useState, useEffect, createContext, useContext } from 'react';
 import { auth, handleGoogleRedirect } from './firebase';
@@ -21,17 +21,33 @@ const AuthContext = createContext<AuthContextType>({ user: null, loading: true }
 
 export const useAuth = () => useContext(AuthContext);
 
+function PostAuthRedirect() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    handleGoogleRedirect()
+      .then(result => {
+        // If we just came back from a Google redirect sign-in, send the user to dashboard.
+        if (result?.user && location.pathname === '/') {
+          navigate('/dashboard', { replace: true });
+        }
+      })
+      .catch(err => console.error('redirect result:', err));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return null;
+}
+
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Handle result if user was redirected back from Google sign-in
-    handleGoogleRedirect().catch(console.error);
-
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setLoading(() => false);
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setLoading(false);
     });
     return unsubscribe;
   }, []);
@@ -47,14 +63,15 @@ export default function App() {
   return (
     <AuthContext.Provider value={{ user, loading }}>
       <Router>
+        <PostAuthRedirect />
         <div className="app-bg grain min-h-screen text-white">
           <Navbar />
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/d/:slug" element={<CardView />} />
-            <Route 
-              path="/dashboard" 
-              element={user ? <Dashboard /> : <Navigate to="/" />} 
+            <Route
+              path="/dashboard"
+              element={user ? <Dashboard /> : <Navigate to="/" />}
             />
           </Routes>
         </div>
