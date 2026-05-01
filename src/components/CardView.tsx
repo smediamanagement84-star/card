@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { db } from '../firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
@@ -54,6 +54,8 @@ export default function CardView() {
   }, [slug]);
 
   const fetchCard = async () => {
+    setLoading(true);
+    setData(null);
     if (slug === 'sample') {
       setData({
         name: 'Sakar Sharma',
@@ -143,7 +145,7 @@ export default function CardView() {
     if (data.website) lines.push(`URL:${formatUrl(data.website)}`);
     if (data.location) lines.push(`ADR:;;${data.location}`);
     lines.push('END:VCARD');
-    return lines.join('\n');
+    return lines.join('\r\n');
   };
 
   if (loading) return (

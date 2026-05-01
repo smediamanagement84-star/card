@@ -206,7 +206,7 @@ export default function Dashboard() {
               <input 
                 type="text" 
                 value={data.slug} 
-                onChange={e => setData({...data, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-')})}
+                onChange={e => setData({...data, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-')})}
                 disabled={!!data.id}
                 className="w-full bg-[#0A0A0A] border border-[#2A2010] p-3 rounded text-sm focus:border-[#C9A84C] outline-none disabled:opacity-50 transition-colors"
                 placeholder="e.g. john-doe"
@@ -371,16 +371,6 @@ export default function Dashboard() {
               />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-[10px] uppercase tracking-[0.1em] text-[#7A7870]">Direct Location</label>
-              <input 
-                type="text" 
-                value={data.location} 
-                onChange={e => setData({...data, location: e.target.value})}
-                className="w-full bg-[#0A0A0A] border border-[#2A2010] p-3 rounded text-sm focus:border-[#C9A84C] outline-none transition-colors"
-                placeholder="City, Country"
-              />
-            </div>
           </div>
         </section>
 
