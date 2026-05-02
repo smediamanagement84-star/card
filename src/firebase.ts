@@ -5,22 +5,18 @@ import {
   signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
-  signInWithPhoneNumber,
-  RecaptchaVerifier,
   signOut,
   browserLocalPersistence,
   setPersistence,
 } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
 import firebaseConfig from '../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 export const auth = getAuth(app);
-export const storage = getStorage(app);
 
-// Persist auth across reloads/closes — important for mobile PWAs
+// Persist auth across reloads/closes — important for mobile + PWA-style use
 setPersistence(auth, browserLocalPersistence).catch(console.error);
 
 export const googleProvider = new GoogleAuthProvider();
@@ -31,7 +27,7 @@ const isMobile = () =>
   /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
 export const loginWithGoogle = async () => {
-  // On mobile, popups are unreliable — use redirect by default
+  // On mobile, popups are unreliable — use redirect by default.
   if (isMobile()) {
     return signInWithRedirect(auth, googleProvider);
   }
@@ -47,5 +43,3 @@ export const loginWithGoogle = async () => {
 
 export const handleGoogleRedirect = () => getRedirectResult(auth);
 export const logout = () => signOut(auth);
-
-export { signInWithPhoneNumber, RecaptchaVerifier };
