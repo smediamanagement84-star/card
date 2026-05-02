@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
 import { Phone, Mail, Globe, MapPin, Sparkles, GraduationCap, Briefcase } from 'lucide-react';
 import { CardTheme } from '../themes';
+import { safeImageSrc } from '../utils/sanitize';
 
 export interface CardPreviewData {
   userType?: 'student' | 'professional';
@@ -58,7 +59,6 @@ export default function CardPreview({ data, theme, scale = 1, showShadow = true 
       )}
 
       <motion.div
-        whileHover={{ y: -4 }}
         className="relative rounded-3xl overflow-hidden"
         style={{ background: theme.background, boxShadow: showShadow ? theme.shadow : 'none', fontFamily: theme.fontBody }}
       >
@@ -81,9 +81,9 @@ export default function CardPreview({ data, theme, scale = 1, showShadow = true 
               <TypeIcon className="w-3 h-3" />
               {isStudent ? 'Student' : 'Professional'}
             </div>
-            {data.logoUrl && (
+            {safeImageSrc(data.logoUrl) && (
               <div className="w-9 h-9 rounded-lg overflow-hidden bg-white/10 flex items-center justify-center">
-                <img src={data.logoUrl} alt="" className="w-full h-full object-contain" />
+                <img src={safeImageSrc(data.logoUrl)} alt="" className="w-full h-full object-contain" />
               </div>
             )}
           </div>
@@ -96,8 +96,8 @@ export default function CardPreview({ data, theme, scale = 1, showShadow = true 
                 border: `2px solid ${theme.accent}`,
               }}
             >
-              {data.photoUrl
-                ? <img src={data.photoUrl} alt={data.name} className="w-full h-full object-cover" />
+              {safeImageSrc(data.photoUrl)
+                ? <img src={safeImageSrc(data.photoUrl)} alt={data.name} className="w-full h-full object-cover" />
                 : <span style={{ color: theme.text }}>{initials}</span>}
             </div>
             <div className="min-w-0 flex-1">

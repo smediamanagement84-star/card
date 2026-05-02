@@ -55,7 +55,7 @@ export default function App() {
   if (loading) {
     return (
       <div className="app-bg min-h-screen flex items-center justify-center">
-        <div className="w-12 h-12 border-2 border-fuchsia-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-10 h-10 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -64,7 +64,7 @@ export default function App() {
     <AuthContext.Provider value={{ user, loading }}>
       <Router>
         <PostAuthRedirect />
-        <div className="app-bg grain min-h-screen text-white">
+        <div className="app-bg min-h-screen">
           <Navbar />
           <Routes>
             <Route path="/" element={<Landing />} />

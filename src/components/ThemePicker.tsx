@@ -12,8 +12,8 @@ export default function ThemePicker({ selectedId, onSelect }: Props) {
     <section className="glass rounded-3xl p-6">
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-fuchsia-500 to-purple-500 flex items-center justify-center">
-            <Palette className="w-4 h-4 text-white" />
+          <div className="w-9 h-9 rounded-xl bg-[var(--accent-soft)] flex items-center justify-center">
+            <Palette className="w-4 h-4 text-[var(--accent)]" />
           </div>
           <div>
             <h3 className="text-base font-bold text-white">Pick your vibe</h3>

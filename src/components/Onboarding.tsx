@@ -22,21 +22,20 @@ export default function Onboarding({ isOpen, onSelect }: Props) {
             transition={{ type: 'spring', damping: 22 }}
             className="relative w-full max-w-3xl rounded-3xl glass-strong p-8 sm:p-10 overflow-hidden"
           >
-            <div className="absolute -top-32 -right-32 w-80 h-80 rounded-full bg-fuchsia-500/30 blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-32 -left-32 w-80 h-80 rounded-full bg-blue-500/30 blur-3xl pointer-events-none" />
+            <div className="absolute -top-32 -right-32 w-80 h-80 rounded-full bg-[var(--accent-soft)] blur-3xl pointer-events-none" />
 
             <div className="relative text-center mb-10">
               <motion.div
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ type: 'spring', delay: 0.2 }}
-                className="w-16 h-16 rounded-2xl bg-gradient-to-br from-fuchsia-500 via-purple-500 to-blue-500 flex items-center justify-center mx-auto mb-5 shadow-2xl shadow-fuchsia-500/40"
+                className="w-14 h-14 rounded-2xl bg-[var(--accent)] flex items-center justify-center mx-auto mb-5"
               >
                 <Sparkles className="w-7 h-7 text-white" />
               </motion.div>
               <motion.h2
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-                className="text-3xl sm:text-4xl font-bold text-white mb-2" style={{ fontFamily: 'Outfit' }}
+                className="text-3xl sm:text-4xl font-semibold text-[var(--text)] mb-2 font-display"
               >
                 What's your <span className="gradient-text">vibe</span>?
               </motion.h2>
@@ -53,14 +52,14 @@ export default function Onboarding({ isOpen, onSelect }: Props) {
                 onClick={() => onSelect('student')}
                 icon={GraduationCap} emoji="🎓" title="Student"
                 desc="University, skills, looking-for tags, and a network panel for hackathons & career fairs."
-                gradient="from-blue-500 via-cyan-500 to-emerald-400"
+                gradient="from-[#D97757] to-[#E0876A]"
                 delay={0.5}
               />
               <ChoiceCard
                 onClick={() => onSelect('professional')}
                 icon={Briefcase} emoji="💼" title="Professional"
                 desc="Company, role, skills, and saved follow-up message templates for after meetings."
-                gradient="from-fuchsia-500 via-pink-500 to-rose-400"
+                gradient="from-[#D97757] to-[#E0876A]"
                 delay={0.6}
               />
             </div>
@@ -98,7 +97,7 @@ function ChoiceCard({
           </div>
           <span className="text-3xl">{emoji}</span>
         </div>
-        <h3 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'Outfit' }}>{title}</h3>
+        <h3 className="text-2xl font-semibold text-[var(--text)] mb-2 font-display">{title}</h3>
         <p className="text-sm text-white/60 leading-relaxed mb-4">{desc}</p>
         <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/80 group-hover:text-white transition-colors">
           Choose <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />

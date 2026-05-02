@@ -32,8 +32,8 @@ export default function QRPanel({ slug, accentColor = '#a855f7' }: Props) {
   return (
     <section className="glass rounded-3xl p-6 sm:p-7">
       <div className="flex items-center gap-2.5 mb-5">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center">
-          <QrCode className="w-4 h-4 text-white" />
+        <div className="w-9 h-9 rounded-xl bg-[var(--accent-soft)] flex items-center justify-center">
+          <QrCode className="w-4 h-4 text-[var(--accent)]" />
         </div>
         <div>
           <h3 className="text-base font-bold text-white">Your QR code</h3>

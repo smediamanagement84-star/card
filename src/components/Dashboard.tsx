@@ -156,7 +156,7 @@ export default function Dashboard() {
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="w-10 h-10 border-2 border-fuchsia-500 border-t-transparent rounded-full animate-spin" />
+      <div className="w-10 h-10 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
     </div>
   );
 
@@ -179,14 +179,14 @@ export default function Dashboard() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 mb-8">
         <div className="space-y-3">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass text-xs">
-            <TypeIcon className="w-3.5 h-3.5 text-fuchsia-400" />
+            <TypeIcon className="w-3.5 h-3.5 text-[var(--accent)]" />
             <span className="font-semibold text-white">{isStudent ? 'Student Profile' : 'Professional Profile'}</span>
             <button type="button" onClick={() => setShowOnboarding(true)} className="text-white/40 hover:text-white ml-1 underline-offset-2 hover:underline">
               switch
             </button>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold text-white" style={{ fontFamily: 'Outfit' }}>
-            Hey, <span className="gradient-text">{(data.name || user?.displayName || 'there').split(' ')[0]}</span>
+          <h2 className="text-3xl sm:text-4xl font-semibold font-display text-[var(--text)]">
+            Hey, <span className="gradient-text italic">{(data.name || user?.displayName || 'there').split(' ')[0]}</span>
           </h2>
           <p className="text-white/50 text-sm max-w-md">
             {isStudent
@@ -234,8 +234,8 @@ export default function Dashboard() {
                 key={s.id} type="button" onClick={() => setActiveSection(s.id)}
                 className={`flex-shrink-0 sm:flex-1 flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
                   activeSection === s.id
-                    ? 'bg-gradient-to-r from-fuchsia-500 to-purple-500 text-white shadow-lg shadow-fuchsia-500/30'
-                    : 'text-white/50 hover:text-white hover:bg-white/5'
+                    ? 'bg-[var(--accent)] text-[var(--bg)]'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-white/5'
                 }`}
               >
                 <s.icon className="w-3.5 h-3.5" />
@@ -382,7 +382,7 @@ export default function Dashboard() {
           </AnimatePresence>
 
           <div className="sticky bottom-4 flex justify-center pt-2 z-20">
-            <button type="submit" disabled={saving} className="btn-primary inline-flex items-center gap-2.5 px-8 py-4 text-sm shadow-2xl shadow-fuchsia-500/40">
+            <button type="submit" disabled={saving} className="btn-primary inline-flex items-center gap-2.5 px-8 py-3.5 text-sm shadow-xl shadow-black/40">
               {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               {data.id ? 'Save changes' : 'Create card'}
             </button>
@@ -423,7 +423,7 @@ function Section({ title, desc, children }: { title: string; desc?: string; chil
   return (
     <div className="glass rounded-3xl p-6 sm:p-7 space-y-4">
       <div>
-        <h3 className="text-lg font-bold text-white" style={{ fontFamily: 'Outfit' }}>{title}</h3>
+        <h3 className="text-lg font-bold text-white" style={{ fontFamily: 'Source Serif 4, Cormorant Garamond, serif' }}>{title}</h3>
         {desc && <p className="text-xs text-white/50 mt-0.5">{desc}</p>}
       </div>
       <div className="space-y-3">{children}</div>

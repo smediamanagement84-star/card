@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import CardPreview, { CardPreviewData } from './CardPreview';
 import { getTheme } from '../themes';
+import { vCardEscape, safeLink } from '../utils/sanitize';
 
 interface CardData extends CardPreviewData {
   id?: string;
@@ -39,18 +40,17 @@ const sampleCard: CardData = {
   slug: 'sample',
 };
 
-const formatUrl = (url: string) => url.startsWith('http') ? url : `https://${url}`;
-
 function buildVCard(d: CardData): string {
-  const lines = ['BEGIN:VCARD', 'VERSION:3.0', `FN:${d.name}`];
-  if (d.title) lines.push(`TITLE:${d.title}`);
-  if (d.company) lines.push(`ORG:${d.company}`);
-  if (d.university) lines.push(`ORG:${d.university}`);
-  if (d.mobile) lines.push(`TEL:${d.mobile}`);
-  if (d.email) lines.push(`EMAIL:${d.email}`);
-  if (d.website) lines.push(`URL:${formatUrl(d.website)}`);
-  if (d.location) lines.push(`ADR:;;${d.location}`);
-  if (d.bio) lines.push(`NOTE:${d.bio.replace(/\r?\n/g, ' ')}`);
+  const lines = ['BEGIN:VCARD', 'VERSION:3.0', `FN:${vCardEscape(d.name)}`];
+  if (d.title) lines.push(`TITLE:${vCardEscape(d.title)}`);
+  if (d.company) lines.push(`ORG:${vCardEscape(d.company)}`);
+  if (d.university && !d.company) lines.push(`ORG:${vCardEscape(d.university)}`);
+  if (d.mobile) lines.push(`TEL:${vCardEscape(d.mobile)}`);
+  if (d.email) lines.push(`EMAIL:${vCardEscape(d.email)}`);
+  const safeWebsite = d.website ? safeLink(d.website) : undefined;
+  if (safeWebsite) lines.push(`URL:${vCardEscape(safeWebsite)}`);
+  if (d.location) lines.push(`ADR:;;${vCardEscape(d.location)};;;;`);
+  if (d.bio) lines.push(`NOTE:${vCardEscape(d.bio)}`);
   lines.push('END:VCARD');
   return lines.join('\r\n');
 }
@@ -173,15 +173,15 @@ export default function CardView() {
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-[60vh] relative z-10">
-      <div className="w-10 h-10 border-2 border-fuchsia-500 border-t-transparent rounded-full animate-spin" />
+      <div className="w-10 h-10 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
     </div>
   );
 
   if (!data) return (
     <div className="text-center py-20 px-4 relative z-10">
       <div className="text-6xl mb-4">🌫️</div>
-      <h2 className="text-3xl font-bold text-white mb-2" style={{ fontFamily: 'Outfit' }}>Card not found</h2>
-      <p className="text-white/50 mb-6">This card doesn't exist or has been moved.</p>
+      <h2 className="text-3xl font-semibold text-[var(--text)] mb-2 font-display">Card not found</h2>
+      <p className="text-[var(--text-muted)] mb-6">This card doesn't exist or has been moved.</p>
       <Link to="/" className="btn-primary inline-flex items-center gap-2">
         <ArrowLeft className="w-4 h-4" /> Go home
       </Link>
@@ -222,7 +222,7 @@ export default function CardView() {
           <a
             href={vCardHref}
             download={fileName}
-            className="btn-primary w-full inline-flex items-center justify-center gap-2 !py-4 text-sm shadow-2xl shadow-fuchsia-500/40"
+            className="btn-primary w-full inline-flex items-center justify-center gap-2 !py-4 text-sm shadow-xl shadow-black/40"
           >
             <Download className="w-4 h-4" />
             Save {data.name.split(' ')[0]} to my phone
@@ -336,7 +336,7 @@ export default function CardView() {
               >
                 <X className="w-4 h-4" />
               </button>
-              <h3 className="text-lg font-bold text-white mb-1 text-center" style={{ fontFamily: 'Outfit' }}>Scan to connect</h3>
+              <h3 className="text-lg font-semibold text-[var(--text)] mb-1 text-center font-display">Scan to connect</h3>
               <p className="text-xs text-white/50 text-center mb-5">Point your camera here to open this card.</p>
               <div className="bg-white p-4 rounded-2xl mx-auto w-fit">
                 <QRCodeSVG value={window.location.href} size={220} level="H" />

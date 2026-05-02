@@ -46,8 +46,8 @@ export default function NetworkPanel({ uid }: Props) {
     <section className="glass rounded-3xl p-6 sm:p-7">
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-500 flex items-center justify-center">
-            <Users className="w-4 h-4 text-white" />
+          <div className="w-9 h-9 rounded-xl bg-[var(--accent-soft)] flex items-center justify-center">
+            <Users className="w-4 h-4 text-[var(--accent)]" />
           </div>
           <div>
             <h3 className="text-base font-bold text-white">My network</h3>
@@ -61,14 +61,14 @@ export default function NetworkPanel({ uid }: Props) {
 
       {loading ? (
         <div className="py-12 flex items-center justify-center">
-          <div className="w-6 h-6 border-2 border-fuchsia-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
         </div>
       ) : items.length === 0 ? (
         <div className="py-12 text-center space-y-2">
           <div className="text-4xl mb-2">🌱</div>
           <div className="text-sm text-white font-semibold">Your network grows as you scan.</div>
           <p className="text-xs text-white/50 max-w-md mx-auto leading-relaxed">
-            Scan or open another EliteCard while signed in and tap <span className="text-fuchsia-400 font-semibold">Add to my network</span> — they'll appear here.
+            Scan or open another EliteCard while signed in and tap <span className="text-[var(--accent)] font-semibold">Add to my network</span> — they'll appear here.
           </p>
         </div>
       ) : (
@@ -94,10 +94,10 @@ export default function NetworkPanel({ uid }: Props) {
               </div>
 
               <div className="flex flex-wrap items-center gap-3 text-[11px] text-white/50 mt-1">
-                {c.email && <a href={`mailto:${c.email}`} className="inline-flex items-center gap-1 hover:text-fuchsia-400"><Mail className="w-3 h-3" /> Email</a>}
-                {c.mobile && <a href={`tel:${c.mobile}`} className="inline-flex items-center gap-1 hover:text-fuchsia-400"><Phone className="w-3 h-3" /> Call</a>}
+                {c.email && <a href={`mailto:${c.email}`} className="inline-flex items-center gap-1 hover:text-[var(--accent)]"><Mail className="w-3 h-3" /> Email</a>}
+                {c.mobile && <a href={`tel:${c.mobile}`} className="inline-flex items-center gap-1 hover:text-[var(--accent)]"><Phone className="w-3 h-3" /> Call</a>}
                 {c.addedAt && <span className="inline-flex items-center gap-1 ml-auto"><Calendar className="w-3 h-3" /> {fmtDate(c.addedAt)}</span>}
-                <Link to={`/d/${c.slug}`} className="inline-flex items-center gap-1 text-fuchsia-400 hover:underline"><ExternalLink className="w-3 h-3" /> View</Link>
+                <Link to={`/d/${c.slug}`} className="inline-flex items-center gap-1 text-[var(--accent)] hover:underline"><ExternalLink className="w-3 h-3" /> View</Link>
               </div>
             </motion.div>
           ))}
