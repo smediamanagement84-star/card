@@ -2,10 +2,27 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0a0a14" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#15130F" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>EliteCard — Your digital identity, beautifully done</title>
     <meta name="description" content="Playful, customizable digital business cards. Pick a theme, share a QR, grow your network." />
+    <script>
+      // Best-effort: unregister any service worker left over from previous builds
+      // so returning users always pick up the freshest bundle. Safe no-op on
+      // browsers that don't support service workers.
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function (regs) {
+          regs.forEach(function (r) { r.unregister(); });
+        }).catch(function () {});
+        if (window.caches && caches.keys) {
+          caches.keys().then(function (keys) {
+            keys.forEach(function (k) { caches.delete(k); });
+          }).catch(function () {});
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

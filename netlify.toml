@@ -28,3 +28,26 @@
   for = "/assets/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
+
+# Never cache the entry HTML — it must always fetch fresh so users
+# pick up new bundle hashes (and the SW-unregister script).
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Kill any leftover service worker assets from the previous PWA build.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-store"
+
+[[headers]]
+  for = "/registerSW.js"
+  [headers.values]
+    Cache-Control = "no-store"

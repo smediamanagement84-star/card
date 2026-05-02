@@ -66,11 +66,8 @@ export default function CardPreview({ data, theme, scale = 1, showShadow = true 
         {theme.pattern === 'grid' && <div className="absolute inset-0 pattern-grid" style={{ color: theme.accent }} />}
         {theme.pattern === 'mesh' && <div className="absolute inset-0 pattern-mesh" />}
 
-        <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full opacity-50 blur-3xl" style={{ background: theme.accent }} />
-        <div className="absolute -bottom-20 -left-20 w-60 h-60 rounded-full opacity-30 blur-3xl" style={{ background: theme.accent }} />
-
         <div
-          className="relative m-3 p-6 rounded-2xl backdrop-blur-xl"
+          className="relative m-3 p-6 rounded-2xl"
           style={{ background: theme.cardBg, border: `1px solid ${theme.cardBorder}`, color: theme.text }}
         >
           <div className="flex items-center justify-between mb-5">

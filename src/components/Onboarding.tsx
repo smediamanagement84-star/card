@@ -22,8 +22,6 @@ export default function Onboarding({ isOpen, onSelect }: Props) {
             transition={{ type: 'spring', damping: 22 }}
             className="relative w-full max-w-3xl rounded-3xl glass-strong p-8 sm:p-10 overflow-hidden"
           >
-            <div className="absolute -top-32 -right-32 w-80 h-80 rounded-full bg-[var(--accent-soft)] blur-3xl pointer-events-none" />
-
             <div className="relative text-center mb-10">
               <motion.div
                 initial={{ scale: 0, rotate: -180 }}
@@ -89,7 +87,6 @@ function ChoiceCard({
       onClick={onClick}
       className="group relative p-7 rounded-3xl bg-white/5 border border-white/10 hover:border-white/20 text-left overflow-hidden transition-all"
     >
-      <div className={`absolute -top-16 -right-16 w-44 h-44 rounded-full bg-gradient-to-br ${gradient} opacity-30 blur-2xl group-hover:opacity-50 transition-opacity`} />
       <div className="relative">
         <div className="flex items-center gap-3 mb-4">
           <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center shadow-lg`}>
