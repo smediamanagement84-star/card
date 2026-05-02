@@ -19,6 +19,7 @@ import TemplatesPanel from './TemplatesPanel';
 import CardPreview from './CardPreview';
 import ThemePicker from './ThemePicker';
 import PhotoUpload from './PhotoUpload';
+import Skeleton from './Skeleton';
 import { getTheme, CardTheme } from '../themes';
 
 type UserType = 'student' | 'professional';
@@ -155,8 +156,24 @@ export default function Dashboard() {
   };
 
   if (loading) return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="w-10 h-10 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
+    <div className="max-w-7xl mx-auto px-4 py-8 sm:py-12 relative z-10">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 mb-8">
+        <div className="space-y-3 w-full">
+          <Skeleton className="h-7 w-40" rounded="full" />
+          <Skeleton className="h-10 w-64" />
+          <Skeleton className="h-4 w-full max-w-md" />
+        </div>
+      </div>
+      <div className="grid lg:grid-cols-[1fr_400px] gap-8">
+        <div className="space-y-6">
+          <Skeleton className="h-12 w-full" rounded="full" />
+          <Skeleton className="h-64 w-full" rounded="3xl" />
+          <Skeleton className="h-48 w-full" rounded="3xl" />
+        </div>
+        <div className="hidden lg:block">
+          <Skeleton className="h-[480px] w-full" rounded="3xl" />
+        </div>
+      </div>
     </div>
   );
 

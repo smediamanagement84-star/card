@@ -84,7 +84,7 @@ export default function AuthModal({ isOpen, onClose, redirectTo = '/dashboard' }
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: '100%', opacity: 1 }}
             transition={{ type: 'spring', damping: 30, stiffness: 320 }}
-            className="relative w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl glass-strong px-6 sm:px-8 pt-3 sm:pt-7 pb-[max(env(safe-area-inset-bottom),1.75rem)]"
+            className="relative w-full sm:max-w-md sm:min-h-0 min-h-[56vh] rounded-t-3xl sm:rounded-3xl glass-strong px-6 sm:px-8 pt-3 sm:pt-7 pb-[max(env(safe-area-inset-bottom),1.75rem)] flex flex-col"
             role="dialog"
             aria-modal="true"
             aria-labelledby="auth-title"
@@ -104,11 +104,11 @@ export default function AuthModal({ isOpen, onClose, redirectTo = '/dashboard' }
               </button>
             </div>
 
-            <div className="text-center mb-6">
-              <div className="w-14 h-14 rounded-2xl bg-[var(--accent)] flex items-center justify-center mx-auto mb-4">
-                <Sparkles className="w-6 h-6 text-[var(--bg)]" />
+            <div className="text-center mb-6 mt-2 sm:mt-0 flex-1 flex flex-col justify-center sm:block">
+              <div className="w-16 h-16 rounded-2xl bg-[var(--accent)] flex items-center justify-center mx-auto mb-5">
+                <Sparkles className="w-7 h-7 text-[var(--bg)]" />
               </div>
-              <h2 id="auth-title" className="text-2xl sm:text-3xl font-semibold font-display text-[var(--text)]">
+              <h2 id="auth-title" className="text-3xl sm:text-3xl font-semibold font-display text-[var(--text)] tracking-tight">
                 Welcome
               </h2>
               <p className="text-[var(--text-muted)] text-sm mt-2 max-w-xs mx-auto">

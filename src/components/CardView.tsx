@@ -9,6 +9,7 @@ import {
   Share2, Download, QrCode, UserPlus, CheckCircle2, X, ArrowLeft, ExternalLink
 } from 'lucide-react';
 import CardPreview, { CardPreviewData } from './CardPreview';
+import Skeleton from './Skeleton';
 import { getTheme } from '../themes';
 import { vCardEscape, safeLink } from '../utils/sanitize';
 
@@ -127,7 +128,10 @@ export default function CardView() {
 
   const addToNetwork = async () => {
     if (!user || !data?.id) return;
+    // Optimistic UI: show success state immediately, roll back on error.
+    setConnected(true);
     setConnecting(true);
+    showToastMsg('Added to your network!');
     try {
       await setDoc(doc(db, 'users', user.uid, 'connections', data.id), {
         cardId: data.id,
@@ -140,10 +144,9 @@ export default function CardView() {
         mobile: data.mobile || '',
         addedAt: serverTimestamp(),
       });
-      setConnected(true);
-      showToastMsg('Added to your network!');
     } catch (err) {
       console.error(err);
+      setConnected(false);
       showToastMsg('Could not add. Try again.');
     } finally { setConnecting(false); }
   };
@@ -172,8 +175,19 @@ export default function CardView() {
   };
 
   if (loading) return (
-    <div className="flex items-center justify-center min-h-[60vh] relative z-10">
-      <div className="w-10 h-10 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
+    <div className="relative z-10 py-6 sm:py-12 px-4 sm:px-6 min-h-[calc(100vh-64px)]">
+      <div className="max-w-md mx-auto mb-4 flex items-center justify-between">
+        <Skeleton className="h-5 w-12" rounded="full" />
+      </div>
+      <div className="max-w-md mx-auto space-y-4">
+        <Skeleton className="h-[460px] w-full" rounded="3xl" />
+        <Skeleton className="h-12 w-full" rounded="full" />
+        <div className="grid grid-cols-3 gap-2">
+          <Skeleton className="h-11" rounded="full" />
+          <Skeleton className="h-11" rounded="full" />
+          <Skeleton className="h-11" rounded="full" />
+        </div>
+      </div>
     </div>
   );
 

@@ -4,6 +4,7 @@ import { db } from '../firebase';
 import { Link } from 'react-router-dom';
 import { Users, Trash2, ExternalLink, Mail, Phone, Calendar } from 'lucide-react';
 import { motion } from 'motion/react';
+import Skeleton from './Skeleton';
 
 interface Props { uid: string; }
 
@@ -60,8 +61,10 @@ export default function NetworkPanel({ uid }: Props) {
       </div>
 
       {loading ? (
-        <div className="py-12 flex items-center justify-center">
-          <div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-20 w-full" rounded="2xl" />
+          ))}
         </div>
       ) : items.length === 0 ? (
         <div className="py-12 text-center space-y-2">

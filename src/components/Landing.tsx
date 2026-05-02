@@ -51,9 +51,10 @@ export default function Landing() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
-              className="text-4xl sm:text-5xl lg:text-6xl font-semibold leading-[1.05] tracking-tight font-display"
+              className="text-[2.75rem] leading-[1] sm:text-6xl lg:text-7xl font-semibold tracking-tight font-display"
             >
-              <span className="text-[var(--text)]">Your card, </span>
+              <span className="text-[var(--text)]">Your card,</span>
+              <br />
               <span className="gradient-text italic">your vibe.</span>
             </motion.h1>
 

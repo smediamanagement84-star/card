@@ -168,6 +168,18 @@ html, body {
 
 ::selection { background: var(--accent-soft); color: var(--text); }
 
+/* Smoother scroll + native momentum on iOS */
+html { -webkit-overflow-scrolling: touch; scroll-behavior: smooth; }
+
+/* Subtle press feedback on touch devices */
+@media (hover: none) {
+  button:active, a:active { transform: scale(0.98); transition: transform 0.08s ease; }
+}
+
+/* Image fade-in to mask network swap */
+img { transition: opacity 0.3s ease; }
+img[loading="lazy"] { background: rgba(255,255,255,0.04); }
+
 /* Reduce motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

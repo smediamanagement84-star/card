@@ -23,7 +23,7 @@ export default function ThemePicker({ selectedId, onSelect }: Props) {
         <span className="text-[10px] uppercase tracking-widest text-white/40">{themes.length} themes</span>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3" style={{ scrollSnapType: 'x mandatory' }}>
         {themes.map((t, i) => {
           const isActive = selectedId === t.id;
           return (
